@@ -20,9 +20,13 @@ Any static host works. On Vercel or Netlify, import the repo with no build comma
 
 | Path | What it is |
 |---|---|
-| `index.html` | Page markup. The logo is one inline SVG path, reused everywhere with `<use href="#lure-path">`. |
-| `styles.css` | Styles. Palette tokens sit at the top (black and `#FD4B00`, taken from the logo). |
-| `main.js` | Hero animation, simulated event ticker, hook catalog, Last Buyer Wins demo, rule-builder examples. |
+| `index.html` | Landing page. The logo is one inline SVG path, reused everywhere with `<use href="#lure-path">`. |
+| `tokens.html` | Token board: trending, new, biggest pots, about to graduate, graduated. Demo data. |
+| `launch.html` | Launch form: token, hooks and their settings, curve, fees, dev buy, live preview. Preview only. |
+| `app.js` | Shared by every page: the fee split (`FEES`), the hook catalog, token cards, rule highlighting. |
+| `styles.css` | Base styles. Palette tokens sit at the top (black and `#FD4B00`, taken from the logo). |
+| `app.css` | Styles for the board and the launch form. |
+| `main.js`, `tokens.js`, `launch.js` | Page scripts. |
 | `assets/` | Logo (SVG, PNG, transparent PNG) and icons. |
 | `dev-server.mjs` | Tiny static server for local preview. |
 

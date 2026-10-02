@@ -166,23 +166,8 @@
   ticker.innerHTML = items.join("") + items.join(""); // twice, so the loop is seamless
   ticker.style.animationDuration = `${Math.round(ticker.scrollWidth / 2 / 70)}s`;
 
-  /* ---------------- Hook catalog ---------------- */
-  const hooks = [
-    { cat: "games", name: "Last Buyer Wins", orig: true, d: "Every qualifying buy resets a countdown. When it hits zero, the last buyer claims the pot." },
-    { cat: "games", name: "King of the Block", orig: true, d: "The biggest buy in each round takes a slice of the pot. The hook counts the rounds, not a server." },
-    { cat: "games", name: "Diamond Hands", orig: true, d: "The hook stamps when each wallet started holding. Selling resets the streak; the longest streaks earn rewards." },
-    { cat: "games", name: "Factions", orig: true, d: "Two tokens, one war. The hook tallies net buys per round and the winning side's holders split the pot." },
-    { cat: "access", name: "Lure Pass", orig: true, d: "Every launch opens with an early window where only wallets holding $LURE can buy." },
-    { cat: "access", name: "Dev Lock", orig: true, d: "The creator's own wallet is locked by the hook: no sells during the cliff, then a daily cap." },
-    { cat: "access", name: "Holder-gated", d: "Only wallets holding a token or NFT you pick can receive. Communities launch for their own." },
-    { cat: "guards", name: "Sniper-fee cap", d: "Buys paying giant priority fees or Jito tips during the launch window are refused." },
-    { cat: "guards", name: "Max per wallet", d: "No wallet can hold more than your cap. The pool is exempt, so trading never breaks." },
-    { cat: "guards", name: "Sliding caps", d: "Per-trade caps tighten as market cap grows, so whales exit in ever smaller pieces." },
-    { cat: "guards", name: "Anti-bundle", d: "Only a few trades per block. A bundler can't buy up the launch in one shot." },
-    { cat: "oracle", name: "Price trigger", orig: true, d: "Sells stay locked until a Pyth price feed crosses your target, like BTC above $150k. Then it unlocks for good." },
-    { cat: "oracle", name: "Market mood", orig: true, d: "Sell caps loosen while SOL pumps and tighten while it dumps, read live from Pyth on every trade." },
-  ];
-  const catLabel = { games: "Game", access: "Access", guards: "Guard", oracle: "Oracle" };
+  /* ---------------- Hook catalog (shared with the app pages, see app.js) ---------------- */
+  const { HOOKS: hooks, CATEGORIES: catLabel, highlight } = window.LURE;
   const grid = document.getElementById("hook-grid");
 
   function renderHooks(filter) {
@@ -199,7 +184,7 @@
             ${h.orig ? '<span class="hook-orig">Lure original</span>' : ""}
           </div>
           <h3>${h.name}</h3>
-          <p>${h.d}</p>`;
+          <p>${h.desc}</p>`;
         grid.appendChild(el);
       });
   }
@@ -307,30 +292,9 @@ rule btc_150k {
   feed btc = pyth("BTC/USD")
   when btc.price < 150000  -> refuse sell
   when btc.price >= 150000 -> unlock forever
-  game last_buyer_wins { timer 10m, min_buy 0.05%, pot 10% }
+  game last_buyer_wins { timer 10m, min_buy 0.05%, pot 50% of creator_fee }
 }`,
   ];
-
-  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const TOKEN = /(#[^\n]*)|("[^"]*")|\b(rule|when|always|and|or|then|feed|game|refuse|unlock|lock|creator|forever|per)\b|(\$[A-Z]+)|(?<![\w$])(\$?\d[\d,.]*(?:%|m|h|d|k)?)|\b([a-z_]+)(?=\()|(->|>=|<|>)/g;
-
-  function highlight(src) {
-    let out = "", last = 0;
-    for (const m of src.matchAll(TOKEN)) {
-      out += esc(src.slice(last, m.index));
-      const [all, com, str, kw, ticker, num, fn, op] = m;
-      if (com) out += `<span class="tk-c">${esc(com)}</span>`;
-      else if (str) out += `<span class="tk-s">${esc(str)}</span>`;
-      else if (kw) out += `<span class="tk-k">${kw}</span>`;
-      else if (ticker) out += `<span class="tk-s">${ticker}</span>`;
-      else if (num) out += `<span class="tk-n">${num}</span>`;
-      else if (fn) out += `<span class="tk-f">${fn}</span>`;
-      else if (op) out += `<span class="tk-k">${esc(op)}</span>`;
-      else out += esc(all);
-      last = m.index + all.length;
-    }
-    return out + esc(src.slice(last));
-  }
 
   const codeEl = document.getElementById("code-ex");
   const showExample = (i) => { codeEl.innerHTML = highlight(examples[i]); };

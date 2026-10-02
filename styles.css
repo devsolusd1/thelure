@@ -107,8 +107,10 @@ code, pre { font-family: var(--mono); }
 .brand { display: inline-flex; align-items: center; gap: 10px; font: 800 22px/1 var(--display); letter-spacing: .04em; }
 .brand .mark { height: 34px; width: auto; aspect-ratio: 1024 / 1544; color: var(--orange); }
 .nav-links { display: flex; gap: 28px; font-size: 14px; color: var(--muted); }
-.nav-links a:hover { color: var(--orange); }
-@media (max-width: 860px) { .nav-links { display: none; } }
+.nav-links .nl-app { color: var(--text); font-weight: 600; }
+.nav-links a:hover, .nav-links a[aria-current="page"] { color: var(--orange); }
+@media (max-width: 860px) { .nav-links .nl-site { display: none; } }
+@media (max-width: 600px) { .nav-cta { display: none; } .nav-links { gap: 20px; } }
 
 /* ---------- hero ---------- */
 .hero {
