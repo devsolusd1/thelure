@@ -5,7 +5,7 @@
   const NETWORK_COST = 0.05; // SOL, estimate: mint, metadata, pool, hook accounts and fees
 
   const state = {
-    name: "", ticker: "", desc: "", x: "", tg: "", web: "", image: null,
+    name: "", ticker: "", desc: "", x: "", web: "", image: null,
     hooks: {}, // hook id -> settings
     curve: "graduating", startMc: 5000, gradMc: 75000,
     potShare: 50, devBuy: 0,
@@ -50,7 +50,6 @@
   bindText("#f-ticker", "ticker", (v) => v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10));
   bindText("#f-desc", "desc");
   bindText("#f-x", "x");
-  bindText("#f-tg", "tg");
   bindText("#f-web", "web");
   $("#f-desc").addEventListener("input", (e) => { $("#desc-count").textContent = e.target.value.length; });
 
@@ -329,7 +328,7 @@
     const id = `mine-${Date.now().toString(36)}`;
     const token = {
       id, name: state.name.trim(), ticker: state.ticker, desc: state.desc.trim(), image: state.image,
-      links: { x: state.x, tg: state.tg, web: state.web },
+      links: { x: state.x, web: state.web },
       createdAt: Date.now(), creator: "you", mc: state.startMc, vol24: 0, change: 0, holders: 1,
       curve: state.curve, startMc: state.startMc, gradMc: state.gradMc,
       hooks: sel.map((h) => h.id), settings: state.hooks, potShare: game ? state.potShare : 0, devBuy: state.devBuy,
