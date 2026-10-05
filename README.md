@@ -1,10 +1,13 @@
 # Lure
 
-**The hook pays you.** Landing page for Lure, a Solana launchpad where Token-2022 transfer hooks run games, reward holders and pay creators, on Meteora bonding curves.
+**The hook pays you.** Lure is a Solana launchpad where Token-2022 transfer hooks run games, reward holders and pay creators, on Meteora bonding curves.
 
-Plain HTML, CSS and JavaScript. No build step, no dependencies.
+This repo holds two things:
 
-## Run locally
+- **The site**, at the repo root: plain HTML, CSS and JavaScript, with no build step and no dependencies.
+- **The on-chain programs**, in [`programs/`](programs/README.md). So far that is the leash, which limits what a token's AI agent can do.
+
+## Run the site locally
 
 ```bash
 node dev-server.mjs
@@ -12,7 +15,7 @@ node dev-server.mjs
 
 Then open http://localhost:5173.
 
-## Deploy
+## Deploy the site
 
 Any static host works. On Vercel or Netlify, import the repo with no build command and the repo root as the output folder.
 
@@ -29,5 +32,6 @@ Any static host works. On Vercel or Netlify, import the repo with no build comma
 | `main.js`, `tokens.js`, `launch.js` | Page scripts. |
 | `assets/` | Logo (SVG, PNG, transparent PNG) and icons. |
 | `dev-server.mjs` | Tiny static server for local preview. |
+| `programs/` | On-chain programs and their tests. Not part of the site. |
 
 Everything on the page marked "simulated" or "in development" is a demo; no hook is live yet.
