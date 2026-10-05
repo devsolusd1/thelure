@@ -68,10 +68,11 @@
 
   function renderStats() {
     const vol = tokens.reduce((s, t) => s + t.vol24, 0);
+    const pots = tokens.filter(hasPot).reduce((s, t) => s + t.game.pot, 0);
     document.getElementById("stats").innerHTML = [
       ["Tokens", String(tokens.length)],
       ["Volume 24h", fmtUsd(vol)],
-      ["Paid to creators 24h", fmtUsd((vol * FEES.creator) / 100), true],
+      ["In game pots now", fmtSol(pots), true],
       ["$LURE bought back 24h", fmtUsd((vol * FEES.buyback) / 100)],
     ].map(([k, v, accent]) => `<div class="stat${accent ? " is-accent" : ""}"><dt>${k}</dt><dd>${v}</dd></div>`).join("");
   }
@@ -172,5 +173,6 @@
       }
       updateCard(t, false);
     }
+    renderStats();
   }, 2500);
 })();

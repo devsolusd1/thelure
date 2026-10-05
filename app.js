@@ -154,7 +154,7 @@ window.LURE = (() => {
 
   /* ---------------- Rule-language highlighting ---------------- */
   const TOKEN =
-    /(#[^\n]*)|("[^"]*")|\b(rule|when|always|and|or|then|feed|game|refuse|unlock|lock|creator|forever|per|require|every|of|scaled_by)\b|(\$[A-Z]+)|(?<![\w$])(\$?\d[\d,.]*(?:%|m|h|d|k)?)|\b([a-z_]+)(?=\()|(->|>=|<|>)/g;
+    /(#[^\n]*)|("[^"]*")|\b(rule|when|always|and|or|then|feed|game|refuse|unlock|lock|creator|forever|per|require|every|of|scaled_by|agent|spend|reward|step)\b|(\$[A-Z]+)|(?<![\w$])(\$?\d[\d,.]*(?:%|m|h|d|k)?)|\b([a-z_]+)(?=\()|(->|>=|<|>)/g;
 
   function highlight(src) {
     let out = "", last = 0;

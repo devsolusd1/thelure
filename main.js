@@ -272,6 +272,32 @@
   startRound();
   setInterval(tick, 250);
 
+  /* ---------------- Agents: a leash walked through its life on devnet ---------------- */
+  // Recorded from programs/examples/devnet-smoke.mjs. Refused actions never became transactions.
+  const RUN = [
+    [true, "Creator creates the leash", "3a8T7eGnqT8VmcygNGsFqEargzREi4nmP7EhZvwrX47vSq2cKC4t7gp3Dcawm7tMnFg1xTRcZy4VTBVaMXFFFk8P"],
+    [true, "Agent sends 0.002 SOL to the pot", "2msaNAWNbDapEfCmUh3axonrMynciqdhv7Y8ndWJicg84oiD6W2hVUffpQu2E4qEYdrYerwCZUZNtGnR7SvpAeEe"],
+    [false, "Agent sends 0.003 SOL at once", "over the cap per action"],
+    [false, "Agent sends SOL to its own wallet", "not an allowed destination"],
+    [false, "A stranger tries to spend", "not the agent"],
+    [true, "Agent sends 0.002 SOL to the buyback", "5Xk5bYwnYhgeLcMuRAqZxTyg2ouvY17ghMsLokJwrqYgWHzGB9uxM1p67ettXV9tFHjEHDw3bHKRqCYP25NcRJ5f"],
+    [false, "Agent sends 0.001 SOL more", "over the daily cap"],
+    [true, "Agent rewards a holder with 0.001 SOL", "3VxM6qg9PJ9URhuw8DdpUFQEPAD9PrKry4SfRcF8avPB4JxuDRN5WLX46JUNTMDHZMoCEE4ZG3wqEoCLRfpfx8Ag"],
+    [true, "Agent moves a rule from 600 to 900", "5275TTm88wNqP6MXKbBY5GAAibvYZA3TZmbXNQcCBwSWx2mRtLP1Kzi8eYdy35vCrW8s2uDzG4rduCDpZvuE5BsP"],
+    [false, "Agent jumps it to 1500", "more than one step"],
+    [true, "Creator revokes the agent", "5X6e1G93nw3b33D38bmyq8guQWYVvP2CV1eJe1g61E1t7quaSo6P13vmzj7gYE7iNg6bAPedFKA33PVmy5RzuWz"],
+    [false, "Revoked agent tries to spend", "no longer the agent"],
+    [true, "Anyone sweeps what's left to the pot", "2ofvRFC2XdEFJhrfpNRsDQJL1XFbT6CbPxMR4zDwUJsX4MLWebWE5QEFXr8rzE1WpyUhkmfD3jpLQYJ2cLuPTS6z"],
+  ];
+  document.getElementById("runlog").innerHTML = RUN.map(([ok, text, detail]) => `
+    <li class="${ok ? "is-ok" : "is-no"}">
+      <span class="run-mark" aria-hidden="true">${ok ? "✓" : "✕"}</span>
+      <span class="run-text"><span class="sr-only">${ok ? "Allowed: " : "Refused: "}</span>${text}</span>
+      ${ok
+        ? `<a class="run-detail" href="https://explorer.solana.com/tx/${detail}?cluster=devnet" target="_blank" rel="noopener">tx</a>`
+        : `<span class="run-detail">${detail}</span>`}
+    </li>`).join("");
+
   /* ---------------- Rule builder examples ---------------- */
   const examples = [
 `# Fair open: small bags first, then it opens up
@@ -293,6 +319,12 @@ rule btc_150k {
   when btc.price < 150000  -> refuse sell
   when btc.price >= 150000 -> unlock forever
   game last_buyer_wins { timer 10m, min_buy 0.05%, pot 50% of creator_fee }
+}`,
+`# The agent runs the game, inside limits fixed at launch
+rule last_bite {
+  game last_buyer_wins { timer agent(5m..30m, step 5m, every 1h), min_buy 0.05% }
+  agent -> spend pot, buyback 1 SOL per action, 3 SOL per day
+  agent -> reward 0.05 SOL each, 0.1 SOL per day
 }`,
   ];
 

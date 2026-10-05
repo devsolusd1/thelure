@@ -4,9 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lure · The hook pays you</title>
-  <meta name="description" content="Lure is a Solana launchpad where transfer hooks don't just block trades: they run games, reward holders and pay creators. Built on Meteora bonding curves.">
+  <meta name="description" content="Lure is a Solana launchpad for tokens with rules built in: hooks that run games on every transfer, and AI agents that can only act inside an on-chain leash. Built on Meteora bonding curves.">
   <meta property="og:title" content="Lure · The hook pays you">
-  <meta property="og:description" content="Token rules that run games, reward holders and pay creators. Solana · Token-2022 transfer hooks · Meteora.">
+  <meta property="og:description" content="Tokens with hooks that run games, and AI agents kept on an on-chain leash. Solana · Token-2022 transfer hooks · Meteora.">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:site" content="@Lurepadfun">
   <meta name="theme-color" content="#000000">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
@@ -33,6 +35,7 @@
         <a href="tokens.html" class="nl-app">Tokens</a>
         <a href="launch.html" class="nl-app">Launch</a>
         <a href="#hooks" class="nl-site">Hooks</a>
+        <a href="#agents" class="nl-site">Agents</a>
         <a href="#games" class="nl-site">Games</a>
         <a href="#flywheel" class="nl-site">Flywheel</a>
       </nav>
@@ -49,11 +52,11 @@
       </div>
       <div class="wrap hero-inner">
         <div class="hero-copy">
-          <p class="eyebrow"><span class="pulse"></span> Transfer-hook launchpad · Solana</p>
+          <p class="eyebrow"><span class="pulse"></span> Hooks and agents · Solana</p>
           <h1>The hook<br><span class="accent">pays you.</span></h1>
           <p class="lede">
-            Other launchpads use hooks to block trades. Lure uses them to run games,
-            reward holders and pay creators, enforced by Solana on every transfer.
+            Tokens with rules built in. Hooks run games on every transfer, and each
+            token's AI agent can only act inside a leash that Solana enforces.
           </p>
           <div class="cta-row">
             <a href="launch.html" class="btn btn-primary">Launch a token</a>
@@ -78,27 +81,29 @@
     <section class="section" id="why">
       <div class="wrap">
         <p class="kicker">Why Lure</p>
-        <h2>Hooks that only say <em>no</em> are half the idea.</h2>
+        <h2>Two things live in every <em>Lure</em> token.</h2>
         <div class="compare">
-          <div class="compare-col compare-old">
-            <h3>Blocking hooks</h3>
+          <div class="compare-col compare-new">
+            <h3>Hooks</h3>
+            <p class="pillar-lede">Rules Solana checks on every buy, sell and send.</p>
             <ul>
-              <li>Caps, walls and refusals</li>
-              <li>Traders see failed transactions</li>
-              <li>Creators earn nothing from their own launch</li>
-              <li>A fixed menu of rules</li>
-              <li>Upgradeable programs you have to trust</li>
+              <li>Games with real pots, streaks and rounds</li>
+              <li>Gates on who can buy, and when</li>
+              <li>Caps against snipers, bundles and dumps</li>
+              <li>A trade that breaks a rule never lands</li>
             </ul>
+            <a class="pillar-link" href="#hooks">See the hooks</a>
           </div>
           <div class="compare-col compare-new">
-            <h3>Lure hooks</h3>
+            <h3>Agents</h3>
+            <p class="pillar-lede">An AI that runs the token, on a leash fixed at launch.</p>
             <ul>
-              <li>Pots, streaks, rounds and rewards</li>
-              <li>Every trade can win something</li>
-              <li>Creators earn a share of every trade</li>
-              <li>Compose your own rules</li>
-              <li>Immutable programs, open source</li>
+              <li>Feeds the pot and the buyback, nowhere else</li>
+              <li>Spends inside caps per action and per day</li>
+              <li>Tunes the rules, inside a set range</li>
+              <li>A fooled agent still can't leave the leash</li>
             </ul>
+            <a class="pillar-link" href="#agents">How the leash works</a>
           </div>
         </div>
       </div>
@@ -130,7 +135,7 @@
         <div class="game-copy">
           <p class="kicker">Game hook · Last Buyer Wins</p>
           <h2>Every buy resets the clock.</h2>
-          <p>The hook records the last qualifying buyer and starts a countdown. The creator routes part of their 0.4% fee into the pot. If nobody buys before the clock hits zero, the last buyer claims it all.</p>
+          <p>The hook records the last qualifying buyer and starts a countdown. A share of the token's trading fees fills the pot, and its agent can top it up. If nobody buys before the clock hits zero, the last buyer claims it all.</p>
           <ul class="ticks">
             <li>No bot, no backend: the hook writes the winner on-chain</li>
             <li>Minimum buy size so dust can't farm the clock</li>
@@ -163,20 +168,53 @@
       </div>
     </section>
 
+    <!-- AGENTS -->
+    <section class="section section-alt" id="agents">
+      <div class="wrap agent-wrap">
+        <div class="agent-copy">
+          <p class="kicker">Agents on a leash</p>
+          <h2>The agent acts. The leash decides.</h2>
+          <p>A token can have an AI agent that runs its game: it feeds the pot, sends SOL to the buyback, rewards holders and tunes the rules. Whoever owns the agent runs it wherever they like.</p>
+          <p>What it may do is written on-chain at launch, in a leash nobody can loosen afterwards. A stolen key or a jailbroken model still only gets what the leash allows.</p>
+          <ul class="ticks">
+            <li>SOL only goes to the accounts picked at launch</li>
+            <li>Caps per action and per day, enforced by the program</li>
+            <li>Each rule moves inside a range, one step at a time</li>
+            <li>The creator can switch the agent off, never loosen it</li>
+          </ul>
+          <p class="agent-links">
+            <a href="https://explorer.solana.com/address/GrojbAndyBXQTo5GxgqXAmDDKjDWkPBPeGniBEQsa89p?cluster=devnet" target="_blank" rel="noopener">Program on devnet</a>
+            <a href="https://github.com/devsolusd1/thelure/tree/main/programs" target="_blank" rel="noopener">Code and tests</a>
+          </p>
+          <p class="footnote">The leash is live on devnet. The hooks that read its rule values are still in development.</p>
+        </div>
+
+        <div class="runlog">
+          <div class="runlog-top">
+            <span class="tag">Devnet</span>
+            <span>A real run · 5 Oct 2026</span>
+          </div>
+          <ol class="runlog-list" id="runlog"></ol>
+          <a class="runlog-foot" href="https://explorer.solana.com/address/E5iPtSAUUMNaDgXqYPCMYt8rEti33pDUXZyw9EeqrNvb?cluster=devnet" target="_blank" rel="noopener">See this leash on the explorer</a>
+        </div>
+      </div>
+    </section>
+
     <!-- RULE BUILDER -->
-    <section class="section section-alt" id="builder">
+    <section class="section" id="builder">
       <div class="wrap builder-wrap">
         <div>
           <p class="kicker">Rule builder</p>
           <h2>Not a menu. A language.</h2>
-          <p>One audited hook program reads the rules you write at launch. Mix conditions on market cap, time, volume, wallet size and price feeds into a rule nobody has launched before.</p>
-          <p class="muted">One program instead of twenty means a smaller surface to audit, and new rules ship without new deploys.</p>
+          <p>One hook program reads the rules you write at launch. Mix conditions on market cap, time, volume, wallet size and price feeds into a rule nobody has launched before.</p>
+          <p class="muted">One program instead of twenty means less code to get wrong, and new rules ship without new deploys. Any value can be handed to the token's agent, inside a range you set.</p>
         </div>
         <div class="code-card">
           <div class="code-tabs" role="tablist">
             <button class="code-tab is-active" data-ex="0" role="tab" aria-selected="true">Fair open</button>
             <button class="code-tab" data-ex="1" role="tab" aria-selected="false">Pass window</button>
             <button class="code-tab" data-ex="2" role="tab" aria-selected="false">Event token</button>
+            <button class="code-tab" data-ex="3" role="tab" aria-selected="false">Agent-run</button>
           </div>
           <pre><code id="code-ex"></code></pre>
         </div>
@@ -184,7 +222,7 @@
     </section>
 
     <!-- FLYWHEEL -->
-    <section class="section" id="flywheel">
+    <section class="section section-alt" id="flywheel">
       <div class="wrap">
         <p class="kicker">The flywheel</p>
         <h2>Every launch feeds $LURE twice.</h2>
@@ -199,11 +237,6 @@
             <span class="fly-num">02</span>
             <h3>Lure Pass</h3>
             <p>Every new launch opens with an early-access window. Only wallets holding $LURE can buy in it. Snipers have to hold $LURE first.</p>
-          </div>
-          <div class="fly-card">
-            <span class="fly-num">03</span>
-            <h3>Creators get 0.4%</h3>
-            <p>The biggest cut of every fee goes to the token's creator: 0.4% of every trade on their curve, so the best launchers have a reason to launch here.</p>
           </div>
         </div>
 
@@ -229,7 +262,7 @@
     </section>
 
     <!-- TRUST -->
-    <section class="section section-alt" id="trust">
+    <section class="section" id="trust">
       <div class="wrap">
         <p class="kicker">What you're trusting</p>
         <h2>As little as possible.</h2>
@@ -243,26 +276,26 @@
             <p>Solana enforces the hook. If this website disappeared tomorrow, every rule would keep running.</p>
           </div>
           <div class="trust">
-            <h3>Immutable after audit</h3>
-            <p>Hook programs are frozen once audited. Nobody, us included, can change a rule under a live token.</p>
+            <h3>Upgradeable for now</h3>
+            <p>The programs have not been audited. While they are tested in public we can still fix them, which also means we could change them. We'll say here when they are frozen.</p>
           </div>
           <div class="trust">
             <h3>Open source</h3>
-            <p>Every program and every fee route is public. Check the code, then check it on Solscan.</p>
+            <p>Every program and its tests are <a href="https://github.com/devsolusd1/thelure/tree/main/programs" target="_blank" rel="noopener">public on GitHub</a>. Check the code, then check it on-chain.</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ROADMAP -->
-    <section class="section" id="roadmap">
+    <section class="section section-alt" id="roadmap">
       <div class="wrap">
         <p class="kicker">Roadmap</p>
         <h2>Cast, wait, reel.</h2>
         <ol class="road">
-          <li class="is-now"><span class="road-phase">Now</span><h3>Site &amp; community</h3><p>The idea in public, rule ideas from the community.</p></li>
-          <li><span class="road-phase">Next</span><h3>Devnet hooks</h3><p>Game, access and guard hooks proven inside live Meteora swaps.</p></li>
-          <li><span class="road-phase">Then</span><h3>Audit</h3><p>Independent review, then programs frozen.</p></li>
+          <li class="is-now"><span class="road-phase">Now</span><h3>Leash on devnet</h3><p>The agent leash is deployed and tested on devnet, with its code public.</p></li>
+          <li><span class="road-phase">Next</span><h3>Hooks on devnet</h3><p>Game, access and guard hooks proven inside real Meteora swaps.</p></li>
+          <li><span class="road-phase">Then</span><h3>Launcher &amp; agents</h3><p>Launch a token with hooks and an agent from this site, on devnet.</p></li>
           <li><span class="road-phase">Launch</span><h3>Mainnet &amp; $LURE</h3><p>Launcher live, flywheel on, Lure Pass active.</p></li>
         </ol>
       </div>
@@ -275,8 +308,8 @@
         <h2>Get lured.</h2>
         <p>Follow along while we build it.</p>
         <div class="cta-row">
-          <a href="#" class="btn btn-dark">Follow on X</a>
-          <a href="#" class="btn btn-dark-ghost">Join Telegram</a>
+          <a href="https://x.com/Lurepadfun" class="btn btn-dark" target="_blank" rel="noopener">Follow @Lurepadfun on X</a>
+          <a href="launch.html" class="btn btn-dark-ghost">Launch a token</a>
         </div>
       </div>
     </section>
@@ -289,6 +322,7 @@
         <span>LURE</span>
       </span>
       <p>Built on Solana · Token-2022 transfer hooks · Meteora bonding curves. Nothing here is financial advice.</p>
+      <a class="footer-link" href="https://x.com/Lurepadfun" target="_blank" rel="noopener">@Lurepadfun on X</a>
     </div>
   </footer>
 

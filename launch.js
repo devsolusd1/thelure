@@ -1,6 +1,6 @@
 (() => {
   const L = window.LURE;
-  const { FEES, CATEGORIES, EXCLUSIVE, HOOKS, hookById, defaults, tokenCard, highlight, fmtUsd, fmtNum, fmtSol, isAddress, shortAddr, esc, toast, loadMine, saveMine } = L;
+  const { CATEGORIES, EXCLUSIVE, HOOKS, hookById, defaults, tokenCard, highlight, fmtUsd, fmtNum, fmtSol, isAddress, shortAddr, esc, toast, loadMine, saveMine } = L;
   const $ = (sel, root = document) => root.querySelector(sel);
   const NETWORK_COST = 0.05; // SOL, estimate: mint, metadata, pool, hook accounts and fees
 
@@ -8,7 +8,7 @@
     name: "", ticker: "", desc: "", x: "", tg: "", web: "", image: null,
     hooks: {}, // hook id -> settings
     curve: "graduating", startMc: 5000, gradMc: 75000,
-    potShare: 50, volume: 100, devBuy: 0,
+    potShare: 50, devBuy: 0,
   };
   const selected = () => HOOKS.filter((h) => state.hooks[h.id]);
   const num = (v) => (v === "" || v == null ? NaN : Number(v));
@@ -199,7 +199,6 @@
   }
   bindNumber("#f-start", "startMc");
   bindNumber("#f-grad", "gradMc");
-  bindNumber("#f-volume", "volume");
   bindNumber("#f-dev", "devBuy");
   $("#f-pot").addEventListener("input", (e) => {
     state.potShare = Number(e.target.value);
@@ -235,7 +234,6 @@
     const startMc = val(state.startMc, 5000), gradMc = val(state.gradMc, 75000);
 
     $("#pot-row").hidden = !game;
-    $("#est-pot-row").hidden = !game;
     $("#pot-label").textContent = `${state.potShare}% of your fee`;
     $("#curve-note").textContent = CURVE_NOTES[state.curve];
 
@@ -247,14 +245,6 @@
       game: game ? gameState(game, false) : null,
     });
     $("#rule-code").innerHTML = highlight(buildRule(sel, gradMc));
-
-    const volume = Math.max(0, val(state.volume, 0));
-    const toPot = game ? state.potShare / 100 : 0;
-    const creatorCut = (volume * FEES.creator) / 100;
-    $("#est-creator").textContent = fmtSol(creatorCut * (1 - toPot));
-    $("#est-pot").textContent = fmtSol(creatorCut * toPot);
-    $("#est-treasury").textContent = fmtSol((volume * FEES.treasury) / 100);
-    $("#est-buyback").textContent = fmtSol((volume * FEES.buyback) / 100);
 
     const dev = Math.max(0, val(state.devBuy, 0));
     $("#cost-dev").textContent = fmtSol(dev);
