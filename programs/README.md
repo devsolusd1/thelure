@@ -2,7 +2,13 @@
 
 On-chain programs for Lure. So far there is one: the leash.
 
-**Status: not audited, not deployed.** Everything here runs in tests only.
+**Status: on devnet only, not audited.** Do not put real money behind it.
+
+| | |
+|---|---|
+| Devnet address | [`GrojbAndyBXQTo5GxgqXAmDDKjDWkPBPeGniBEQsa89p`](https://explorer.solana.com/address/GrojbAndyBXQTo5GxgqXAmDDKjDWkPBPeGniBEQsa89p?cluster=devnet) |
+| Upgrade authority | `7f2MiAuyJ1Aaiheo9ctLgJmzGDWoDceyHEEuVB2mhPAA` (still upgradeable) |
+| Mainnet | not deployed |
 
 ## Leash
 
@@ -85,9 +91,21 @@ It runs the rule tests on the host, builds the on-chain binary, and runs that bi
 
 `leash-tests` pins LiteSVM 0.16 because 0.17 needs Rust 1.97.
 
+### Try it on devnet
+
+[examples/devnet-smoke.mjs](examples/devnet-smoke.mjs) creates a leash on devnet and walks it through its whole life with real transactions: funding, spending, rewards, a parameter change, a revoke and a sweep, plus every refusal along the way. It is also the client example: each instruction is built there.
+
+```bash
+cd examples
+npm install
+KEYPAIR=~/.config/solana/id.json node devnet-smoke.mjs
+```
+
+The keypair acts as the creator and pays the fees, about 0.015 devnet SOL a run.
+
 ### Cost
 
-Measured on 2026-10-05 with `solana rent`; devnet and mainnet give the same numbers.
+Rent measured on 2026-10-05 with `solana rent`; devnet and mainnet give the same numbers. The devnet deploy cost exactly this.
 
 | | |
 |---|---|

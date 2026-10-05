@@ -1,0 +1,12 @@
+{
+  "name": "lure-leash-examples",
+  "private": true,
+  "type": "module",
+  "description": "Client example for the leash program: a full run on devnet.",
+  "scripts": {
+    "smoke": "node devnet-smoke.mjs"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.98.0"
+  }
+}
