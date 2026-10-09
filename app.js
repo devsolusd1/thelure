@@ -81,13 +81,14 @@ window.LURE = (() => {
       dsl: (s) => `when age < ${s.window}m and holds($LURE) < ${s.min} -> refuse buy`,
     },
     {
-      id: "devlock", cat: "access", name: "Dev Lock", orig: true,
-      desc: "The creator's own wallet is locked by the hook: no sells during the cliff, then a daily cap.",
+      // Still under its first id, so tokens saved in a browser keep finding it.
+      id: "devlock", cat: "access", name: "Fair open", orig: true,
+      desc: "For the first minutes every wallet, the creator's included, can only take a small piece. Then the cap opens up.",
       settings: [
-        { key: "cliff", label: "Cliff", unit: "days", min: 1, max: 90, step: 1, def: 7 },
-        { key: "daily", label: "Daily sell cap after", unit: "% of bag", min: 0.1, max: 10, step: 0.1, def: 1 },
+        { key: "window", label: "Opening window", unit: "min", min: 1, max: 240, step: 1, def: 30 },
+        { key: "cap", label: "Max per wallet in it", unit: "% supply", min: 0.05, max: 2, step: 0.05, def: 0.25 },
       ],
-      dsl: (s) => `creator -> lock ${s.cliff}d then sell ${s.daily}% per day`,
+      dsl: (s) => `when age < ${s.window}m -> max_wallet ${s.cap}%`,
     },
     {
       id: "gated", cat: "access", name: "Holder-gated",
@@ -116,13 +117,13 @@ window.LURE = (() => {
     },
     {
       id: "sliding", cat: "guards", name: "Sliding caps",
-      desc: "Per-sell caps tighten as market cap grows, so whales exit in ever smaller pieces.",
+      desc: "The most one buy can take shrinks as the market cap grows, so late whales come in small pieces.",
       settings: [
-        { key: "sell0", label: "Max sell at launch", unit: "% supply", min: 0.05, max: 5, step: 0.05, def: 1 },
+        { key: "buy0", label: "Max buy at launch", unit: "% supply", min: 0.05, max: 5, step: 0.05, def: 1 },
         { key: "mc", label: "Tighten from", unit: "$ mcap", min: 10000, max: 1e9, step: 10000, def: 1000000 },
-        { key: "sell1", label: "Max sell after", unit: "% supply", min: 0.05, max: 5, step: 0.05, def: 0.25 },
+        { key: "buy1", label: "Max buy after", unit: "% supply", min: 0.05, max: 5, step: 0.05, def: 0.25 },
       ],
-      dsl: (s) => `always -> max_sell ${s.sell0}%\nwhen mcap > $${fmtNum(s.mc)} -> max_sell ${s.sell1}%`,
+      dsl: (s) => `always -> max_buy ${s.buy0}%\nwhen mcap > $${fmtNum(s.mc)} -> max_buy ${s.buy1}%`,
     },
     {
       id: "bundle", cat: "guards", name: "Anti-bundle",
@@ -132,21 +133,21 @@ window.LURE = (() => {
     },
     {
       id: "price", cat: "oracle", name: "Price trigger", orig: true,
-      desc: "Sells stay locked until a Pyth price feed crosses your target, like BTC above $150k. Then it unlocks for good.",
+      desc: "Buying opens when a Pyth price feed crosses your target, like BTC above $150k. Until then the token waits. Selling is never locked.",
       settings: [
         { key: "feed", label: "Price feed", type: "select", options: [["BTC/USD", "BTC/USD"], ["ETH/USD", "ETH/USD"], ["SOL/USD", "SOL/USD"]], def: "BTC/USD" },
-        { key: "target", label: "Unlock sells at", unit: "$", min: 1, max: 1e9, step: 1, def: 150000 },
+        { key: "target", label: "Open buys at", unit: "$", min: 1, max: 1e9, step: 1, def: 150000 },
       ],
-      dsl: (s) => `when pyth("${s.feed}") < ${s.target} -> refuse sell`,
+      dsl: (s) => `when pyth("${s.feed}") < ${s.target} -> refuse buy`,
     },
     {
       id: "mood", cat: "oracle", name: "Market mood", orig: true,
-      desc: "Sell caps loosen while SOL pumps and tighten while it dumps, read live from Pyth on every trade.",
+      desc: "The game clock runs faster while SOL pumps and slower while it dumps, read from Pyth on every buy.",
       settings: [
-        { key: "base", label: "Base max sell", unit: "% supply", min: 0.05, max: 5, step: 0.05, def: 0.5 },
+        { key: "base", label: "Clock when calm", unit: "min", min: 1, max: 60, step: 1, def: 10 },
         { key: "sens", label: "Sensitivity", unit: "%", min: 1, max: 100, step: 1, def: 25 },
       ],
-      dsl: (s) => `always -> max_sell ${s.base}% scaled_by pyth("SOL/USD").change_1h * ${s.sens}%`,
+      dsl: (s) => `always -> game_timer ${s.base}m scaled_by pyth("SOL/USD").change_1h * ${s.sens}%`,
     },
   ];
   const hookById = Object.fromEntries(HOOKS.map((h) => [h.id, h]));
