@@ -3,10 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lure · Every coin needs a hook</title>
-  <meta name="description" content="Lure is a Solana launchpad for tokens with rules built in: hooks that run games on every transfer, and AI agents that can only act inside an on-chain leash. Built on Meteora bonding curves.">
-  <meta property="og:title" content="Lure · Every coin needs a hook">
-  <meta property="og:description" content="Tokens with hooks that run games, and AI agents kept on an on-chain leash. Solana · Token-2022 transfer hooks · Meteora.">
+  <title>Token · Lure</title>
+  <meta name="description" content="One Lure token: its game, its rules, its curve, and a box to buy and sell it. Read from Solana in your browser.">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:site" content="@Lurepadfun">
   <meta name="theme-color" content="#000000">
@@ -17,10 +15,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
 </head>
-<body class="landing">
+<body class="tk">
 
-  <!-- The Lure logo, traced from the original artwork and split into its parts. <use href="#lure-path"> draws it whole. -->
   <svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false">
     <defs>
       <path id="lure-line" fill-rule="evenodd" d="M 1276 228.5 L 1276 457 1279.7 458.5 C 1284.4 460.5,1299.1 460.8,1304.2 459.1 L 1308 457.8 1308 228.9 L 1308 0 1292 0 L 1276 0 1276 228.5"/>
@@ -32,144 +30,126 @@
     </defs>
   </svg>
 
-  <a class="skip" href="#hook">Skip to the hook</a>
-
-  <header class="top">
-    <a href="index.html" class="brand" aria-label="Lure home">
-      <svg class="mark" viewBox="730 420 1024 1544" aria-hidden="true"><use href="#lure-path"/></svg>
-      <span>LURE</span>
-    </a>
-    <nav class="ptags" aria-label="Main">
-      <a class="ptag ptag-l" href="tokens.html"><span>Tokens</span></a>
-      <a class="ptag ptag-r" href="launch.html"><span>Launch</span></a>
-    </nav>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="index.html" class="brand" aria-label="Lure home">
+        <svg class="mark" viewBox="730 420 1024 1544" aria-hidden="true"><use href="#lure-path"/></svg>
+        <span>LURE</span>
+      </a>
+      <nav class="nav-links" aria-label="Main">
+        <a href="tokens.html" class="nl-app">Tokens</a>
+        <a href="launch.html" class="nl-app">Launch</a>
+      </nav>
+      <span class="tag tk-net" data-net="devnet" hidden>Devnet</span>
+      <span class="tk-wallet"><button type="button" class="btn btn-small btn-ghost" data-wallet>Connect wallet</button></span>
+    </div>
   </header>
 
-  <!-- The rig: the logo hung from the top of the window. main.js moves it; until then it just hangs. -->
-  <svg class="rig-still" viewBox="730 0 1024 1964" aria-hidden="true" focusable="false"><use href="#lure-path"/></svg>
-  <svg class="rig" id="rig" aria-hidden="true" focusable="false">
-    <path id="rig-line" class="rig-line"/>
-    <g id="rig-tackle">
-      <use href="#lure-knot"/><use href="#lure-hook"/><use href="#lure-tie"/>
-      <g id="rig-bait"><use href="#lure-fish"/></g>
-    </g>
-    <g id="rig-extras"></g>
-  </svg>
-  <div class="stamp" id="stamp" aria-hidden="true"></div>
-
-  <!-- The weights on the line: one per screen. -->
-  <nav class="depths" id="depths" aria-label="On this page">
-    <a href="#top" data-depth="top"><span>Top</span></a>
-    <a href="#hook" data-depth="hook"><span>The hook</span></a>
-    <a href="#box" data-depth="box"><span>13 hooks</span></a>
-    <a href="#agent" data-depth="agent"><span>The agent</span></a>
-    <a href="#proof" data-depth="proof"><span>What exists</span></a>
-  </nav>
-
-  <main>
-    <section class="screen" id="top" data-depth="top">
-      <div class="screen-in">
-        <h1>Every coin<br><span class="accent">needs a hook.</span></h1>
-        <p class="fact">A Solana launchpad. Every token launches with rules built in and an AI agent on a leash.</p>
-        <div class="cta-row">
-          <a href="launch.html" class="btn btn-primary">Launch a token</a>
-          <a href="tokens.html" class="btn btn-ghost">Browse tokens</a>
-        </div>
-        <a class="proofline" href="#hook">Devnet · 5 Oct 2026 · a buy over the cap · refused by the hook · 0x1770</a>
-        <p class="bait"><svg class="bait-ico" viewBox="1338 930 412 985" aria-hidden="true"><use href="#lure-fish"/></svg><span>I'm the bait. Follow me down.</span></p>
+  <main class="app tk-page">
+    <section class="wrap page-head">
+      <div>
+        <p class="kicker">Token</p>
+        <h1 class="page-title" id="tk-title">One token<br><span class="accent">and its hook.</span></h1>
+        <p class="src tk-id" id="tk-id"></p>
       </div>
     </section>
 
-    <section class="screen" id="hook" data-depth="hook">
-      <div class="screen-in">
-        <p class="bait"><svg class="bait-ico" viewBox="1338 930 412 985" aria-hidden="true"><use href="#lure-fish"/></svg><span>Every trade has to get past the hook.</span></p>
-        <h2>One rule here: no wallet holds more than 1%.</h2>
-        <div class="pills" role="group" aria-label="Replay the devnet run">
-          <button type="button" class="pill" data-play="under">Buy under the cap</button>
-          <button type="button" class="pill" data-play="over">Buy over the cap</button>
-          <button type="button" class="pill" data-play="sell">Sell</button>
-        </div>
-        <p class="readout" id="hook-out" aria-live="polite">Press one. Each replays a real swap on a Meteora curve.</p>
-        <figure class="cu">
-          <div class="cu-rule"><i></i></div>
-          <figcaption>The hook used <b>659</b> of the swap's <b>85,424</b> compute units.</figcaption>
-        </figure>
-        <p class="src">
-          Devnet, 5 Oct 2026 ·
-          <a href="https://explorer.solana.com/address/2zuHRx4bDF6EEmov8kKY8TEiLmxea53chrQYm7TkgBoY?cluster=devnet" target="_blank" rel="noopener">the pool</a> ·
-          <a href="https://explorer.solana.com/address/4akkPWLw1imyEhcqAJaHgPPrbDZr6VPaHPifVUV7K5tS?cluster=devnet" target="_blank" rel="noopener">the hook program</a>
-        </p>
-      </div>
-    </section>
+    <div class="wrap">
+      <p class="demo-banner" data-net="devnet" hidden><b>Devnet.</b> To trade, your wallet must hold devnet SOL. Set the wallet to devnet too, or it may warn that it cannot preview the transaction.</p>
+      <p class="tk-status" id="tk-status" role="status">Reading the token…</p>
+      <noscript><p class="tk-status is-error">This page reads the token from Solana inside your browser, so it needs JavaScript.</p></noscript>
 
-    <section class="screen" id="box" data-depth="box">
-      <div class="screen-in">
-        <p class="bait"><svg class="bait-ico" viewBox="1338 930 412 985" aria-hidden="true"><use href="#lure-fish"/></svg><span>Pick what I'm hooked to.</span></p>
-        <h2>13 hooks. Three are live.</h2>
-        <div class="box" id="box-list">
-          <noscript><p class="fact">Games, access rules, guards and oracle triggers. <a href="launch.html">See them all on the launch page.</a></p></noscript>
-        </div>
-        <div class="card" id="box-card" aria-live="polite" hidden></div>
-        <div class="curves">
-          <span class="curves-k">Each token picks its curve</span>
-          <button type="button" class="pill pill-s" data-curve="grad" aria-pressed="false">Graduates</button>
-          <button type="button" class="pill pill-s" data-curve="inf" aria-pressed="false">Infinite bonding</button>
-        </div>
-        <p class="readout" id="curve-out" aria-live="polite"></p>
-      </div>
-    </section>
+      <div class="tk-grid" id="tk-body" hidden>
 
-    <section class="screen" id="agent" data-depth="agent">
-      <div class="screen-in">
-        <p class="bait"><svg class="bait-ico" viewBox="1338 930 412 985" aria-hidden="true"><use href="#lure-fish"/></svg><span>I go as far as the line lets me. So does every agent.</span></p>
-        <h2>The agent hosts the game. The leash holds the agent.</h2>
-        <p class="fact">Its whole job: feed the pot when the game goes quiet, and turn the clock. How much and how far is fixed at launch.</p>
-        <div class="pills" id="agent-pills" role="group" aria-label="Replay the leash run"></div>
-        <p class="readout" id="agent-out" aria-live="polite">Press one. Each is a real try on devnet.</p>
-        <p class="src">
-          <a href="agent.html?net=devnet">A demo agent on devnet, read from Solana: try to break it</a> ·
-          <button type="button" class="linkish" id="run-open">the full run: 13 tries, 7 landed, 6 refused</button>
-        </p>
-      </div>
-    </section>
+        <section class="tk-game" id="tk-game" aria-labelledby="tk-game-k" hidden>
+          <p class="bait"><svg class="bait-ico" viewBox="1338 930 412 985" aria-hidden="true"><use href="#lure-fish"/></svg><span>Last one to bite takes the pot.</span></p>
+          <div class="card">
+            <h2 class="tk-k" id="tk-game-k">Last Buyer Wins</h2>
+            <p class="tk-clock" id="tk-clock" role="timer" aria-label="Time left in the round">--:--</p>
+            <p class="tk-state" id="tk-state"></p>
+            <dl class="tk-facts">
+              <div><dt>Pot</dt><dd id="tk-pot"></dd></div>
+              <div><dt id="tk-lead-k">Leads</dt><dd id="tk-lead"></dd></div>
+              <div><dt>A buy sets the clock to</dt><dd id="tk-timer"></dd></div>
+            </dl>
+            <p class="src tk-last" id="tk-last"></p>
+            <div class="tk-pay" id="tk-pay" hidden>
+              <button type="button" class="btn btn-primary" id="tk-pay-btn">Pay the winner</button>
+              <p class="src" id="tk-pay-how">Anyone can press it. The pot goes to the last buyer; you pay only the network fee.</p>
+            </div>
+            <p class="readout tk-out" id="tk-pay-out" aria-live="polite"></p>
+          </div>
+        </section>
 
-    <section class="screen screen-last" id="proof" data-depth="proof">
-      <div class="screen-in">
-        <p class="bait"><svg class="bait-ico" viewBox="1338 930 412 985" aria-hidden="true"><use href="#lure-fish"/></svg><span>This is what holds me up.</span></p>
-        <div class="slip">
-          <p class="slip-head">Lure · what exists today</p>
-          <dl>
-            <div><dt>Hook program</dt><dd><a href="https://explorer.solana.com/address/4akkPWLw1imyEhcqAJaHgPPrbDZr6VPaHPifVUV7K5tS" target="_blank" rel="noopener">4akk…K5tS</a> · mainnet · 33 KB</dd></div>
-            <div><dt>Leash program</dt><dd><a href="https://explorer.solana.com/address/GrojbAndyBXQTo5GxgqXAmDDKjDWkPBPeGniBEQsa89p" target="_blank" rel="noopener">Groj…a89p</a> · mainnet · 18 KB</dd></div>
-            <div><dt>Hook in a Meteora swap</dt><dd>659 of 85,424 compute units, on devnet</dd></div>
-            <div><dt>Fee on launched tokens</dt><dd>1%: creator 0.4 · treasury 0.4 · Meteora 0.2</dd></div>
-            <div><dt>$LURE</dt><dd>3% fee per trade · not launched · no contract address yet</dd></div>
-            <div><dt>Audit</dt><dd>none · programs still upgradeable</dd></div>
-          </dl>
-        </div>
-        <div class="cta-row exits">
-          <a href="launch.html" class="btn btn-primary">Launch a token</a>
-          <a href="tokens.html" class="btn btn-ghost">Browse tokens</a>
-        </div>
-        <p class="src">
-          <a href="https://x.com/Lurepadfun" target="_blank" rel="noopener">@Lurepadfun on X</a> ·
-          Built on Solana, Token-2022 transfer hooks and Meteora bonding curves. Nothing here is financial advice.
-        </p>
+        <section class="tk-trade" id="tk-trade" aria-labelledby="tk-trade-title">
+          <h2 id="tk-trade-title">Trade</h2>
+          <div class="tk-sides" role="group" aria-label="Buy or sell">
+            <button type="button" class="pill pill-s" id="tk-side-buy" aria-pressed="true">Buy</button>
+            <button type="button" class="pill pill-s" id="tk-side-sell" aria-pressed="false">Sell</button>
+          </div>
+          <form id="tk-form" novalidate>
+            <div class="field">
+              <label class="field-label" for="tk-amount" id="tk-amount-label">You pay</label>
+              <span class="input-unit">
+                <input type="text" id="tk-amount" inputmode="decimal" autocomplete="off" placeholder="0.0" aria-describedby="tk-balance">
+                <span class="unit" id="tk-unit">SOL</span>
+              </span>
+              <span class="field-help" id="tk-balance"></span>
+            </div>
+            <div class="tk-quick" id="tk-quick" role="group" aria-label="Amounts"></div>
+            <div class="tk-quote" id="tk-quote" aria-live="polite"></div>
+            <label class="tk-slip" for="tk-slippage"><span>Slippage</span>
+              <select id="tk-slippage">
+                <option value="50">0.5%</option>
+                <option value="100" selected>1%</option>
+                <option value="300">3%</option>
+                <option value="1000">10%</option>
+              </select>
+            </label>
+            <button type="submit" class="btn btn-primary btn-block" id="tk-go">Buy</button>
+          </form>
+          <p class="readout tk-out" id="tk-out" aria-live="polite"></p>
+          <p class="src tk-fee" id="tk-fee"></p>
+        </section>
+
+        <section class="tk-sec" aria-labelledby="tk-rules-title">
+          <h2 id="tk-rules-title">The rules</h2>
+          <p class="src tk-how">Checked by the token's hook on every transfer, inside the transfer itself.</p>
+          <ul class="tk-list" id="tk-rules"></ul>
+        </section>
+
+        <section class="tk-sec" aria-labelledby="tk-curve-title">
+          <h2 id="tk-curve-title">The curve</h2>
+          <dl class="tk-stats" id="tk-stats"></dl>
+          <div class="tcurve tk-curve" id="tk-curve"></div>
+        </section>
       </div>
-    </section>
+
+      <form class="tk-find" action="token.html" method="get">
+        <label class="field-label" for="tk-find-input">Look at another token</label>
+        <div class="tk-find-row">
+          <input type="text" id="tk-find-input" name="mint" placeholder="Token address" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+          <button type="submit" class="btn btn-small btn-ghost">Open</button>
+        </div>
+      </form>
+    </div>
   </main>
 
-  <dialog class="sheet" id="run-dialog" aria-labelledby="run-title">
-    <div class="sheet-top">
-      <h2 id="run-title">One leash, start to end</h2>
-      <form method="dialog"><button class="pill pill-s" value="close">Close</button></form>
-    </div>
-    <p class="src">A real run on devnet, 5 Oct 2026. Refused tries never became transactions.</p>
-    <ol class="runlog-list" id="runlog"></ol>
-    <a class="runlog-foot" href="https://explorer.solana.com/address/E5iPtSAUUMNaDgXqYPCMYt8rEti33pDUXZyw9EeqrNvb?cluster=devnet" target="_blank" rel="noopener">See this leash on the explorer</a>
-  </dialog>
+  <div class="stamp" id="stamp" aria-hidden="true"></div>
 
-  <script src="app.js"></script>
-  <script src="main.js"></script>
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span class="brand brand-small">
+        <svg class="mark" viewBox="730 420 1024 1544" aria-hidden="true"><use href="#lure-path"/></svg>
+        <span>LURE</span>
+      </span>
+      <p>Built on Solana · Token-2022 transfer hooks · Meteora bonding curves. Nothing here is financial advice.</p>
+      <a class="footer-link" href="https://x.com/Lurepadfun" target="_blank" rel="noopener">@Lurepadfun on X</a>
+    </div>
+  </footer>
+
+  <script src="net.js"></script>
+  <script src="vendor/lure-chain.js"></script>
+  <script src="token.js"></script>
 </body>
 </html>

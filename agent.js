@@ -13,12 +13,20 @@
 
   /* ================= Addresses ================= */
 
-  const RPC_URL = "https://api.devnet.solana.com";
-  const EXPLORER = "https://explorer.solana.com";
-  const CLUSTER = "devnet";
-  // Shown when the link names no leash: the run made by programs/examples/devnet-smoke.mjs.
-  const DEMO_LEASH = "6E6i1HrRUeQQ8bkA9VqhNvExzVQxux4ScDN4RB1kjyMY";
-  const LEASH_PROGRAM = "GrojbAndyBXQTo5GxgqXAmDDKjDWkPBPeGniBEQsa89p";
+  // Everything about the cluster comes from net.js: the page loads it first (window.LURE_NET),
+  // and Node, which runs this file's pure half without a page, requires it.
+  const NET = root.LURE_NET || (typeof require === "function" ? require("./net.js") : null);
+  if (!NET) throw new Error("agent.js needs net.js loaded before it");
+  // A value this page needs is still empty in net.js: net.js has said so on the page, and
+  // nothing below would have anything to read.
+  if (root.document && NET.notReady(["rpcUrl", "leashProgram", "hookProgram"])) return;
+  const RPC_URL = NET.rpcUrl;
+  const EXPLORER = NET.explorer;
+  const EXPLORER_SUFFIX = NET.explorerSuffix; // "?cluster=devnet" on devnet, nothing on mainnet
+  const CLUSTER = NET.cluster;
+  // Shown when the link names no leash.
+  const DEMO_LEASH = (NET.demo && NET.demo.leash) || "";
+  const LEASH_PROGRAM = NET.leashProgram;
   // A simulated transaction needs a fee payer that exists. The creator when it holds SOL, else this.
   const FALLBACK_PAYER = "7f2MiAuyJ1Aaiheo9ctLgJmzGDWoDceyHEEuVB2mhPAA";
   const SYSTEM_PROGRAM = "11111111111111111111111111111111";
@@ -72,7 +80,7 @@
    * back to plain words ("its first destination", "dial 1") and nothing else changes.
    */
   const HOOK_V1 = {
-    PROGRAM: "4akkPWLw1imyEhcqAJaHgPPrbDZr6VPaHPifVUV7K5tS",
+    PROGRAM: NET.hookProgram,
     RULES_LEN: 272,
     RULES_VERSION: 2,
     FLAG_LAST_BUYER_WINS: 1,
@@ -174,8 +182,8 @@
     return new Date(Number(unix) * 1000).toLocaleString("en-GB", options);
   }
 
-  const addressUrl = (a) => `${EXPLORER}/address/${encodeURIComponent(a)}?cluster=${CLUSTER}`;
-  const txUrl = (sig) => `${EXPLORER}/tx/${encodeURIComponent(sig)}?cluster=${CLUSTER}`;
+  const addressUrl = (a) => `${EXPLORER}/address/${encodeURIComponent(a)}${EXPLORER_SUFFIX}`;
+  const txUrl = (sig) => `${EXPLORER}/tx/${encodeURIComponent(sig)}${EXPLORER_SUFFIX}`;
 
   // A memo is whatever its sender typed. Control and direction-override characters are dropped
   // here; the HTML escaping happens where the text meets the page, in `toHtml`.

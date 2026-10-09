@@ -24,8 +24,12 @@ Any static host works. On Vercel or Netlify, import the repo with no build comma
 | Path | What it is |
 |---|---|
 | `index.html` | Landing page: five screens beside the logo, which hangs from the top of the window as a rig. The logo is inline SVG, split into its parts (line, knot, hook, tie, fish) and reused whole with `<use href="#lure-path">`. |
-| `tokens.html` | Token board: trending, new, biggest pots, about to graduate, graduated. Demo data. |
-| `launch.html` | Launch form: token, hooks and their settings, curve, fees, dev buy, live preview. Preview only. |
+| `tokens.html` | Token board: every token launched under the two Lure configs, read from the chain. |
+| `token.html` | One token: its game live, buy and sell with a wallet, pay the winner, its rules. |
+| `launch.html` | Launch form: builds and sends a real launch (token, the three live rules, an agent on a leash, the curve, a first buy). |
+| `agent.html` | The leash page: what a token's agent may do, simulated attempts to break it, what it did. |
+| `net.js` | The one file that says which cluster the site talks to, with its RPC, program and config addresses. `?net=devnet` on a page asks for devnet for that view. |
+| `vendor/lure-chain.js` | The chain layer the pages use, built from `tools/chain` (`npm run build` there). |
 | `app.js` | Shared by every page: the fee split (`FEES`), the hook catalog, token cards, rule highlighting. |
 | `styles.css` | Base styles. Palette tokens sit at the top (black and `#FD4B00`, taken from the logo). |
 | `app.css` | Styles for the board and the launch form. |
@@ -35,4 +39,4 @@ Any static host works. On Vercel or Netlify, import the repo with no build comma
 | `dev-server.mjs` | Tiny static server for local preview. |
 | `programs/` | On-chain programs and their tests. Not part of the site. |
 
-The landing shows only things that happened: its buttons replay real devnet transactions and link to them. The board and the launch form are still demos, and say so. The leash and the first hook (a cap per wallet) are live on devnet only.
+The site runs on mainnet. The landing shows only things that happened: its buttons replay real devnet transactions and link to them. The programs are not audited and still upgradeable.

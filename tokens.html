@@ -17,7 +17,8 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
 </head>
-<body>
+<!-- "tk" gives this page the token page's nav strip (wallet control, phone widths); "bd" is the board's own block in app.css. -->
+<body class="tk bd">
 
   <svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false">
     <defs>
@@ -40,7 +41,8 @@
         <a href="tokens.html" class="nl-app" aria-current="page">Tokens</a>
         <a href="launch.html" class="nl-app">Launch</a>
       </nav>
-      <button type="button" class="btn btn-small btn-ghost nav-cta" data-demo-wallet>Connect wallet</button>
+      <span class="tag tk-net" data-net="devnet" hidden>Devnet</span>
+      <span class="tk-wallet"><button type="button" class="btn btn-small btn-ghost" data-wallet>Connect wallet</button></span>
     </div>
   </header>
 
@@ -55,36 +57,33 @@
     </section>
 
     <div class="wrap">
-      <p class="demo-banner"><b>Demo data.</b> Nothing here is live yet. Tokens you launch in the preview show up here, in this browser only.</p>
+      <p class="demo-banner" data-net="devnet" hidden><b>Devnet.</b> Every token here lives on Solana's devnet, where SOL is free and worth nothing.</p>
+      <p class="tk-status bd-status" id="bd-status" role="status">Reading the board…</p>
+      <noscript><p class="tk-status is-error">The board is read from Solana inside your browser, so it needs JavaScript.</p></noscript>
 
-      <dl class="stats" id="stats"></dl>
-      <p class="fee-note">Every trade pays <b>1%</b>: 0.4% to the token's creator, 0.4% to the Lure treasury and 0.2% to the Meteora protocol.</p>
+      <div id="bd-body" hidden>
+        <dl class="stats bd-stats" id="stats"></dl>
+        <p class="fee-note" id="bd-fee"></p>
 
-      <div class="board-controls">
-        <div class="tabs" role="tablist" aria-label="Sort tokens">
-          <button class="tab is-active" data-tab="trending" role="tab" aria-selected="true">Trending</button>
-          <button class="tab" data-tab="new" role="tab" aria-selected="false">New</button>
-          <button class="tab" data-tab="pots" role="tab" aria-selected="false">Biggest pots</button>
-          <button class="tab" data-tab="graduating" role="tab" aria-selected="false">About to graduate</button>
-          <button class="tab" data-tab="graduated" role="tab" aria-selected="false">Graduated</button>
+        <div class="board-controls">
+          <div class="tabs" role="group" aria-label="Filter tokens">
+            <button type="button" class="tab is-active" data-filter="all" aria-pressed="true">All</button>
+            <button type="button" class="tab" data-filter="playing" aria-pressed="false">Playing</button>
+            <button type="button" class="tab" data-filter="infinite" aria-pressed="false">Infinite bonding</button>
+            <button type="button" class="tab" data-filter="graduating" aria-pressed="false">Graduating</button>
+            <button type="button" class="tab" data-filter="graduated" aria-pressed="false" hidden>Graduated</button>
+          </div>
+          <label class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+            <input type="search" id="search" placeholder="Name, symbol or address" aria-label="Search tokens by name, symbol or address" autocomplete="off" autocapitalize="off" spellcheck="false">
+          </label>
         </div>
-        <label class="search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
-          <input type="search" id="search" placeholder="Search name or ticker" aria-label="Search tokens" autocomplete="off">
-        </label>
-      </div>
 
-      <div class="filters" id="cat-filters" role="group" aria-label="Filter by hook">
-        <button class="chip is-active" data-cat="all" aria-pressed="true">All hooks</button>
-        <button class="chip" data-cat="games" aria-pressed="false">Games</button>
-        <button class="chip" data-cat="access" aria-pressed="false">Access</button>
-        <button class="chip" data-cat="guards" aria-pressed="false">Guards</button>
-        <button class="chip" data-cat="oracle" aria-pressed="false">Oracle</button>
+        <p class="board-meta" id="board-meta" aria-live="polite"></p>
+        <div class="board-grid" id="board"></div>
+        <p class="empty" id="empty" hidden></p>
+        <p class="bd-more" id="bd-more-row" hidden><button type="button" class="pill pill-s" id="bd-more">Show more</button></p>
       </div>
-
-      <p class="board-meta" id="board-meta"></p>
-      <div class="board-grid" id="board"></div>
-      <p class="empty" id="empty" hidden>No tokens match. <a href="launch.html">Launch one?</a></p>
     </div>
   </main>
 
@@ -99,7 +98,8 @@
     </div>
   </footer>
 
-  <script src="app.js"></script>
+  <script src="net.js"></script>
+  <script src="vendor/lure-chain.js"></script>
   <script src="tokens.js"></script>
 </body>
 </html>

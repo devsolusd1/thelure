@@ -1,0 +1,21 @@
+{
+  "name": "lure-chain",
+  "private": true,
+  "type": "module",
+  "description": "The chain layer of the Lure site: reads, quotes, transaction builders, sending and wallets. Bundled into ../../vendor/lure-chain.js.",
+  "main": "src/index.mjs",
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "node check.mjs"
+  },
+  "dependencies": {
+    "@meteora-ag/dynamic-bonding-curve-sdk": "1.5.13",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.98.0",
+    "bn.js": "^5.2.1",
+    "buffer": "^6.0.3"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

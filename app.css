@@ -305,3 +305,226 @@ input[type="range"] { width: 100%; accent-color: var(--orange); }
   .leash-log .run-detail { grid-column: 1; text-align: left; }
 }
 /* ==================== leash page (agent.html): end ==================== */
+
+/* ==================== token page (token.html): start ====================
+   One block. `.tk` is the body of token.html; the `tk-wallet` rules are also what
+   LureChain.wallets.button() needs on any page that mounts the wallet control.
+   The rest of the page is built from styles.css and from the rules above: page head, nav
+   strip, card, pills, chips, readout, fields, the curve bar, tag, stamp. */
+
+/* the wallet control in the nav strip */
+.tk-wallet { position: relative; display: inline-flex; flex: none; }
+.tk-wallet [data-wallet].is-connected { font: 600 13px/1 var(--mono); color: var(--orange); border-color: var(--orange); }
+.tk-wallet [data-wallet][disabled] { opacity: .55; cursor: progress; }
+.tk-wallet-menu {
+  position: absolute; right: 0; top: calc(100% + 10px); z-index: 30; width: min(270px, calc(100vw - 32px));
+  display: grid; gap: 2px; padding: 8px; border-radius: 12px;
+  background: var(--bg); border: 1.5px solid var(--orange); box-shadow: 5px 5px 0 var(--orange);
+}
+.tk-wallet-item {
+  display: block; width: 100%; padding: 12px; border: 0; border-radius: 8px; background: none; cursor: pointer;
+  font: 600 14px/1.2 var(--body); color: var(--text); text-align: left;
+}
+.tk-wallet-item:hover, .tk-wallet-item:focus-visible { background: var(--orange); color: #000; outline: none; }
+.tk-wallet-note { margin: 0; padding: 8px 12px; font: 500 12px/1.5 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+
+.tk .nav-inner { gap: 12px; }
+.tk-id { margin-top: 16px; overflow-wrap: anywhere; }
+.tk-id a, .tk-list a, .tk-facts a, .tk-last a {
+  color: var(--cream); text-decoration: underline; text-decoration-color: rgba(253, 75, 0, .6); text-underline-offset: 3px;
+}
+.tk-id a:hover, .tk-list a:hover, .tk-facts a:hover, .tk-last a:hover { color: var(--orange); }
+.tk-addr { font-family: var(--mono); font-size: .92em; white-space: nowrap; }
+.tk-status { margin: 0 0 36px; max-width: 760px; min-height: 1.6em; font: 500 13px/1.6 var(--mono); color: var(--muted); }
+.tk-status.is-error { padding: 14px 16px; border: 1.5px dashed var(--cream); border-radius: 10px; font-size: 14px; color: var(--cream); }
+
+.tk-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 60px 36px; align-items: start; margin-bottom: 76px; }
+.tk-grid > * { grid-column: 1; min-width: 0; }
+.tk-grid h2 { font-size: clamp(30px, 3.6vw, 48px); max-width: none; margin-bottom: 18px; }
+
+/* the game: the clock is data, so it is mono; orange while it runs */
+.tk-game .bait { margin-bottom: 14px; }
+.tk-game .card { margin: 0; padding: 24px 28px 22px; }
+.tk-grid h2.tk-k { font: 700 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 16px; }
+.tk-game .tk-clock {
+  margin: 0 0 12px; font: 700 clamp(68px, 13vw, 150px)/.9 var(--mono); letter-spacing: -0.06em; color: var(--orange);
+  white-space: nowrap;
+}
+.tk-game .tk-clock.is-long { font-size: clamp(40px, 8.4vw, 100px); }
+/* not running yet: only its outline */
+.tk-game .tk-clock.is-idle { color: transparent; -webkit-text-stroke: 2px var(--cream); }
+.tk-game .tk-clock.is-over { color: var(--cream); }
+.tk-game .tk-state { margin: 0 0 22px; font: 700 clamp(18px, 1.7vw, 23px)/1.25 var(--display); letter-spacing: -0.01em; color: var(--text); }
+.tk-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 20px; margin: 0; padding-top: 18px; border-top: 1px solid var(--line); }
+.tk-facts dt { font: 600 10px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.tk-facts dd { margin: 0; font: 700 19px/1.2 var(--body); color: var(--text); overflow-wrap: anywhere; }
+.tk-game .card .tk-last { margin: 18px 0 0; font-size: 13px; color: var(--muted); }
+.tk-game .card .tk-last:empty { display: none; }
+.tk-pay { margin-top: 20px; display: grid; gap: 10px; justify-items: start; }
+.tk-game .card .tk-pay .src { margin: 0; font-size: 13px; color: var(--muted); }
+.tk-out { margin: 14px 0 0; min-height: 0; max-width: none; overflow-wrap: anywhere; }
+.tk-out:empty { display: none; }
+.tk-out[aria-busy="true"] { opacity: .7; }
+
+/* the trade box: beside the game on a wide screen, under it on a narrow one */
+.tk-trade {
+  grid-column: 2; grid-row: 1 / span 3; position: sticky; top: calc(var(--nav-h) + 20px);
+  padding: 22px; border-radius: 18px; background: var(--surface); border: 1.5px solid var(--line);
+}
+.tk-grid .tk-trade h2 { font-size: 26px; margin-bottom: 16px; }
+.tk-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+.tk-trade .field { margin-bottom: 10px; }
+.tk-trade input[type="text"] { font: 600 20px/1.2 var(--mono); }
+.tk-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.tk-quick .chip { padding: 8px 12px; font-size: 13px; }
+.tk-quote { min-height: 4.6em; margin-bottom: 14px; font: 500 13px/1.55 var(--mono); color: var(--muted); }
+.tk-quote p { margin: 0; }
+.tk-quote b { color: var(--text); font-weight: 600; }
+.tk-checks { list-style: none; margin: 10px 0 0; padding: 10px 0 0; border-top: 1px solid var(--line); display: grid; gap: 7px; }
+.tk-checks li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 8px; }
+.tk-checks li::before { content: "✓"; color: var(--orange); font-weight: 700; }
+.tk-checks li.is-no { color: var(--cream); }
+.tk-checks li.is-no::before { content: "✕"; color: var(--cream); }
+.tk-slip { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; font: 500 12px/1 var(--mono); color: var(--muted); }
+.tk-slip select { width: auto; padding: 8px 34px 8px 12px; font-size: 13px; }
+.tk-trade .btn[disabled] { opacity: .5; cursor: default; transform: none; box-shadow: none; }
+.tk-fee { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 12px; }
+/* while the page is the logo inverted, its dark boxes go with it */
+.is-refused .tk-trade, .is-refused .tk-stats > div, .is-refused .tk-trade input, .is-refused .tk-trade select { background: transparent; border-color: #000; }
+
+/* the rules and the curve */
+.tk-how { max-width: 62ch; margin-bottom: 16px; }
+.tk-list { list-style: none; margin: 0; padding: 0; border-bottom: 1px solid var(--line); }
+.tk-list li { padding: 12px 0; border-top: 1px solid var(--line); font-size: 15px; line-height: 1.5; color: var(--soft); }
+.tk-list b { font-weight: 600; color: var(--text); }
+.tk-list .tk-now { display: block; margin-top: 3px; font: 500 13px/1.5 var(--mono); color: var(--muted); }
+.tk-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0 0 18px; }
+.tk-stats > div { padding: 16px 18px; border-radius: var(--radius); background: var(--surface); border: 1.5px solid var(--line); min-width: 0; }
+.tk-stats dt { font: 700 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.tk-stats dd { margin: 0; font: 700 clamp(17px, 2vw, 22px)/1.15 var(--mono); color: var(--text); overflow-wrap: anywhere; }
+.tk-stats dd small { font: 500 12px/1 var(--mono); color: var(--muted); }
+.tk-curve { font-size: 13px; line-height: 1.5; }
+.tk-curve p { flex-basis: 100%; margin: 0; max-width: 62ch; }
+.tk-curve b { color: var(--text); }
+
+.tk-find { display: grid; gap: 8px; max-width: 520px; }
+.tk-find-row { display: flex; gap: 10px; }
+.tk-find-row input { min-width: 0; font-family: var(--mono); font-size: 13px; }
+
+@media (max-width: 1000px) {
+  .tk-grid { grid-template-columns: minmax(0, 1fr); gap: 48px; }
+  .tk-trade { grid-column: 1; grid-row: auto; position: static; }
+}
+@media (max-width: 520px) {
+  .tk-net { display: none; } /* no room in the strip; the banner under the title says it */
+  .tk .nav .brand span { display: none; }
+  .tk .nav-inner { gap: 8px; }
+  .tk .nav-links { gap: 6px; margin-left: 2px; }
+  .tk-wallet [data-wallet] { padding: 10px 12px; font-size: 13px; }
+  .tk-game .card { padding: 18px 16px 16px; box-shadow: 4px 4px 0 var(--orange); }
+  .tk-facts { grid-template-columns: 1fr 1fr; }
+  .tk-facts dd { font-size: 17px; }
+  .tk-trade { padding: 18px 16px; }
+  .tk-game .tk-clock.is-idle { -webkit-text-stroke-width: 1.5px; }
+}
+/* ==================== token page (token.html): end ==================== */
+
+/* ==================== tokens board (tokens.html): start ====================
+   One block. `.bd` is the body of tokens.html, beside `.tk`, which lends it the token page's
+   nav strip and wallet control. The board is built from the rules above: page head, stats,
+   tabs, search, the token card and its chips, and the token page's status line. */
+.bd-status { margin-bottom: 28px; }
+.bd-status .pill { display: block; margin-top: 12px; }
+.bd-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bd-stats dd { overflow-wrap: anywhere; }
+@media (max-width: 860px) {
+  .bd-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bd-stats .is-accent { grid-column: 1 / -1; }
+}
+/* on a phone the count is short and the sum is not */
+@media (max-width: 520px) { .bd-stats { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); } }
+.bd .tab .bd-n { margin-left: 3px; font: 600 11px/1 var(--mono); opacity: .65; }
+/* the tab strip scrolls sideways and would cut a ring drawn outside the tab */
+.bd .tab:focus-visible { outline-color: var(--cream); outline-offset: -4px; }
+
+/* the whole card is the link to its token page */
+.bd-card .tcard-head { grid-template-columns: 56px minmax(0, 1fr); }
+.bd-card h3 a::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius); }
+.bd-card h3 a:focus-visible { outline: none; }
+.bd-card h3 a:focus-visible::after { outline: 2px solid var(--orange); outline-offset: 3px; }
+.bd-card .tstats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.bd-card .tstats dd { overflow-wrap: anywhere; }
+.bd-card .tstats small { font: 500 11px/1 var(--mono); color: var(--muted); }
+.bd-card .tcurve { margin-top: auto; }
+.bd-card .tgame-note.is-over { color: var(--cream); font-weight: 700; }
+.bd-more { margin: 28px 0 0; text-align: center; }
+/* ==================== tokens board (tokens.html): end ==================== */
+
+/* ==================== launch page (launch.html): start ====================
+   One block. `.lp` is the body of launch.html, beside `.tk`, which lends it the token page's
+   nav strip and wallet control. The form, its preview card, the sidebar and the dialog are
+   built from the rules above ("launch page", "token card", "modal"); this adds what a real
+   launch needs: the hooks that are not live yet, the agent, and the steps as they land. */
+.lp-status {
+  margin: 0 0 28px; padding: 14px 16px; max-width: 760px;
+  border: 1.5px dashed var(--cream); border-radius: 10px; font: 500 14px/1.6 var(--mono); color: var(--cream);
+}
+
+/* step 1: the image is a link, shown where a file used to drop */
+.lp-avatar, .lp-avatar:hover { cursor: default; border-color: var(--line-strong); color: var(--muted); }
+.lp-avatar.has-img { border-style: solid; border-color: var(--orange); }
+
+/* step 2: what is not live yet stays on the shelf */
+.hpick.is-soon, .hpick.is-soon:hover { border-style: dashed; border-color: var(--line); }
+.hpick.is-soon .hpick-label { cursor: default; }
+.hpick.is-soon .hpick-check { border-style: dashed; opacity: .5; }
+.hpick.is-soon .hpick-name, .hpick.is-soon .hpick-desc { color: var(--muted); }
+.lp-soon { font-size: 10px; padding: 4px 6px; }
+.lp-problem { margin: 18px 0 0; font-size: 13px; }
+.lp-note { margin: 0 0 14px; max-width: 66ch; font: 400 12.5px/1.55 var(--mono); color: var(--muted); }
+
+/* the agent, inside the game it hosts */
+.lp-agent { padding: 2px 16px 6px 52px; }
+.lp-agent .hset { padding: 0; }
+.lp-check { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 14px; font: 600 14px/1.3 var(--body); cursor: pointer; }
+.lp-check input { flex: none; width: 18px; height: 18px; margin: 0; accent-color: var(--orange); }
+.lp-key { display: flex; gap: 10px; }
+.lp-key input { min-width: 0; font-family: var(--mono); font-size: 13px; }
+.lp-keyfile { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.lp-keyfile .field-help { flex: 1 1 220px; }
+@media (max-width: 560px) {
+  .lp-agent { padding-left: 16px; }
+  .lp-key { flex-wrap: wrap; }
+  .lp-key input { flex: 1 1 100%; }
+}
+
+/* the sidebar and the dialog */
+.lp .cost dd { text-align: right; overflow-wrap: anywhere; }
+.lp .side-note + .side-note { margin-top: 8px; }
+.lp .btn[disabled] { opacity: .5; cursor: default; transform: none; box-shadow: none; }
+.lp-modal { width: min(640px, 100%); }
+.lp-modal h2 { margin-bottom: 14px; }
+.lp-modal:focus { outline: none; }
+.lp-modal code { font-size: .92em; color: var(--cream); overflow-wrap: anywhere; }
+.lp-out { min-height: 0; max-width: none; margin-bottom: 20px; overflow-wrap: anywhere; }
+.lp-out[aria-busy="true"] { opacity: .75; }
+.lp-steps li > span { display: grid; gap: 4px; min-width: 0; }
+.lp-step-meta, .lp-step-state { font: 500 12px/1.5 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.lp-step-state { color: var(--soft); }
+.lp-steps a, .lp-out a { color: var(--orange); text-decoration: underline; text-underline-offset: 3px; }
+.lp-steps li.is-busy .lp-step-state { color: var(--text); }
+.lp-steps li.is-ok::before { background: var(--orange); color: #000; }
+.lp-steps li.is-ok .lp-step-state { color: var(--orange); font-weight: 700; }
+.lp-steps li.is-no::before { border-style: dashed; border-color: var(--cream); color: var(--cream); }
+.lp-steps li.is-no .lp-step-state { color: var(--cream); font-weight: 700; }
+.lp-cost { padding-top: 16px; border-top: 1px solid var(--line); }
+.lp-modal .modal-error { margin: 0 0 18px; }
+.lp-try { display: grid; gap: 8px; margin: 0 0 22px; padding-top: 16px; border-top: 1px solid var(--line); }
+.lp-try-row { display: flex; gap: 10px; }
+.lp-try-row input { min-width: 0; font-family: var(--mono); font-size: 13px; }
+.lp-done { margin: 0 0 22px; }
+.lp-done .lp-note { margin: 18px 0 8px; }
+.lp-done .rule-pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+/* a refusal is stamped over the dialog, not under it */
+.lp .stamp { z-index: 70; }
+/* ==================== launch page (launch.html): end ==================== */

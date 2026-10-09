@@ -298,7 +298,7 @@
   });
 
   /* ---------------- Screen 3: the tackle box ---------------- */
-  const STATUS = { maxw: "Live on devnet", bundle: "Live on devnet", lbw: "Live on devnet" };
+  const STATUS = { maxw: "Live", bundle: "Live", lbw: "Live" };
   const KINDS = { games: "Games", access: "Access", guards: "Guards", oracle: "Oracles" };
   const boxList = $("box-list"), boxCard = $("box-card");
   boxList.innerHTML = Object.entries(CATEGORIES)
