@@ -5,7 +5,9 @@
   "description": "Client examples for the Lure programs: full runs on devnet.",
   "scripts": {
     "smoke": "node devnet-smoke.mjs",
-    "probe": "node meteora-probe.mjs"
+    "probe": "node meteora-probe.mjs",
+    "host": "node host-agent.mjs",
+    "test:host": "node --test host-policy.test.mjs"
   },
   "dependencies": {
     "@meteora-ag/dynamic-bonding-curve-sdk": "^1.5.13",

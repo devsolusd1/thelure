@@ -16,7 +16,7 @@ A Token-2022 transfer hook. Token-2022 calls it in the middle of every transfer 
 
 The code in this folder is its second version. It carries three rules: a cap on what a wallet can hold, a limit on how much can be bought from the curve in one block, and a game, Last Buyer Wins. Each rule is optional, and all of them are fixed when the token is launched.
 
-**The copy on devnet is still the first version**, which has only the wallet cap and a count of transfers. It stays that way until the next deploy. The second version has run in the simulator only, never inside a Meteora swap.
+**Devnet runs this version** since 2026-10-09, upgraded in place at the same address. [examples/demo-token.mjs](examples/demo-token.mjs) launched a token with all three rules on a curve that never graduates and traded it through Meteora: the first buy was counted under the guard, the next one took the lead and started a clock read from the leash, and the hook used about 1,060 compute units in each swap. [examples/host-agent.mjs](examples/host-agent.mjs) is the reference agent that hosts the game; on that token it fed the pot with a real leash spend. Some paragraphs below still describe the state before this deploy.
 
 ### Buys, sells and transfers
 

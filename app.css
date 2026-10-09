@@ -259,3 +259,49 @@ input[type="range"] { width: 100%; accent-color: var(--orange); }
   transition: opacity .2s ease, transform .2s ease;
 }
 .toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+
+/* ==================== leash page (agent.html): start ====================
+   One block, used only by agent.html. The rest of that page is built from styles.css and
+   from the rules above: page head, nav strip, pills, readout, run log list, card, tag, stamp. */
+.leash-id { margin-top: 16px; }
+.leash-status { margin: 0 0 44px; max-width: 760px; min-height: 1.6em; font: 500 13px/1.6 var(--mono); color: var(--muted); }
+.leash-status.is-error { padding: 14px 16px; border: 1.5px dashed var(--cream); border-radius: 10px; font-size: 14px; color: var(--cream); }
+.leash-status .pill { margin-top: 12px; }
+.leash-sec { max-width: 760px; margin: 0 0 76px; }
+.leash-sec h2 { font-size: clamp(30px, 3.6vw, 48px); max-width: none; margin-bottom: 18px; }
+.leash-sec .bait { margin-bottom: 14px; }
+.leash-sec .card { margin-bottom: 0; padding: 20px 22px 10px; }
+.leash-rules { list-style: none; margin: 0; padding: 0; }
+.leash-rules li { padding: 11px 0; border-top: 1px solid var(--line); font-size: 15px; line-height: 1.5; color: var(--soft); }
+.leash-rules b, .leash-log b { font-weight: 600; color: var(--text); }
+.leash-addr {
+  font-family: var(--mono); font-size: .92em; color: var(--cream); white-space: nowrap;
+  text-decoration: underline; text-decoration-color: rgba(253, 75, 0, .6); text-underline-offset: 3px;
+}
+.leash-addr:hover { color: var(--orange); }
+.leash-how { max-width: 62ch; margin-bottom: 18px; }
+.leash-sec .readout { max-width: 62ch; min-height: 6.5em; margin-bottom: 0; }
+.leash-line { display: block; margin-top: 6px; }
+.leash-sec .pills[aria-busy="true"] .pill, .leash-sec .pill[disabled], .leash-sec .readout[aria-busy="true"] { opacity: .55; cursor: progress; }
+.leash-log { margin-top: 0; border-top: 1px solid var(--line); }
+.leash-log li { grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; padding: 12px 0; font-size: 15px; line-height: 1.45; }
+.leash-log li:last-child { border-bottom: 1px solid var(--line); }
+.leash-log .run-text { overflow-wrap: anywhere; color: var(--soft); }
+.leash-log .is-no .run-text, .leash-log .is-no b { color: var(--muted); }
+.leash-log .run-detail { white-space: nowrap; }
+/* the agent's own words are the bait talking, so they are orange */
+.leash-note { display: block; margin-top: 5px; font: 700 16px/1.3 var(--display); letter-spacing: -0.01em; color: var(--orange); }
+.leash-note.is-other { font: 500 13px/1.5 var(--mono); letter-spacing: 0; color: var(--muted); }
+.leash-state { margin: 14px 0 0; min-height: 1.7em; }
+.leash-sec #log-more { margin-top: 12px; }
+.leash-find { display: grid; gap: 8px; max-width: 520px; }
+.leash-find-row { display: flex; gap: 10px; }
+.leash-find-row input { min-width: 0; font-family: var(--mono); font-size: 13px; }
+@media (max-width: 520px) {
+  .leash-net { display: none; } /* no room in the strip; the banner under the title says it */
+  .leash-sec { margin-bottom: 60px; }
+  .leash-sec .card { padding: 16px 16px 6px; box-shadow: 4px 4px 0 var(--orange); }
+  .leash-log li { grid-template-columns: minmax(0, 1fr); }
+  .leash-log .run-detail { grid-column: 1; text-align: left; }
+}
+/* ==================== leash page (agent.html): end ==================== */

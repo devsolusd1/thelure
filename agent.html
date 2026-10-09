@@ -3,10 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lure · Every coin needs a hook</title>
-  <meta name="description" content="Lure is a Solana launchpad for tokens with rules built in: hooks that run games on every transfer, and AI agents that can only act inside an on-chain leash. Built on Meteora bonding curves.">
-  <meta property="og:title" content="Lure · Every coin needs a hook">
-  <meta property="og:description" content="Tokens with hooks that run games, and AI agents kept on an on-chain leash. Solana · Token-2022 transfer hooks · Meteora.">
+  <title>The leash · Lure</title>
+  <meta name="description" content="What one token's AI agent may do, what the leash answers when it tries more, and everything it did. Read from Solana in your browser.">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:site" content="@Lurepadfun">
   <meta name="theme-color" content="#000000">
@@ -17,10 +15,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
 </head>
-<body class="landing">
+<body>
 
-  <!-- The Lure logo, traced from the original artwork and split into its parts. <use href="#lure-path"> draws it whole. -->
   <svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false">
     <defs>
       <path id="lure-line" fill-rule="evenodd" d="M 1276 228.5 L 1276 457 1279.7 458.5 C 1284.4 460.5,1299.1 460.8,1304.2 459.1 L 1308 457.8 1308 228.9 L 1308 0 1292 0 L 1276 0 1276 228.5"/>
@@ -32,144 +30,81 @@
     </defs>
   </svg>
 
-  <a class="skip" href="#hook">Skip to the hook</a>
-
-  <header class="top">
-    <a href="index.html" class="brand" aria-label="Lure home">
-      <svg class="mark" viewBox="730 420 1024 1544" aria-hidden="true"><use href="#lure-path"/></svg>
-      <span>LURE</span>
-    </a>
-    <nav class="ptags" aria-label="Main">
-      <a class="ptag ptag-l" href="tokens.html"><span>Tokens</span></a>
-      <a class="ptag ptag-r" href="launch.html"><span>Launch</span></a>
-    </nav>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="index.html" class="brand" aria-label="Lure home">
+        <svg class="mark" viewBox="730 420 1024 1544" aria-hidden="true"><use href="#lure-path"/></svg>
+        <span>LURE</span>
+      </a>
+      <nav class="nav-links" aria-label="Main">
+        <a href="tokens.html" class="nl-app">Tokens</a>
+        <a href="launch.html" class="nl-app">Launch</a>
+      </nav>
+      <span class="tag leash-net">Devnet</span>
+    </div>
   </header>
 
-  <!-- The rig: the logo hung from the top of the window. main.js moves it; until then it just hangs. -->
-  <svg class="rig-still" viewBox="730 0 1024 1964" aria-hidden="true" focusable="false"><use href="#lure-path"/></svg>
-  <svg class="rig" id="rig" aria-hidden="true" focusable="false">
-    <path id="rig-line" class="rig-line"/>
-    <g id="rig-tackle">
-      <use href="#lure-knot"/><use href="#lure-hook"/><use href="#lure-tie"/>
-      <g id="rig-bait"><use href="#lure-fish"/></g>
-    </g>
-    <g id="rig-extras"></g>
-  </svg>
-  <div class="stamp" id="stamp" aria-hidden="true"></div>
-
-  <!-- The weights on the line: one per screen. -->
-  <nav class="depths" id="depths" aria-label="On this page">
-    <a href="#top" data-depth="top"><span>Top</span></a>
-    <a href="#hook" data-depth="hook"><span>The hook</span></a>
-    <a href="#box" data-depth="box"><span>13 hooks</span></a>
-    <a href="#agent" data-depth="agent"><span>The agent</span></a>
-    <a href="#proof" data-depth="proof"><span>What exists</span></a>
-  </nav>
-
-  <main>
-    <section class="screen" id="top" data-depth="top">
-      <div class="screen-in">
-        <h1>Every coin<br><span class="accent">needs a hook.</span></h1>
-        <p class="fact">A Solana launchpad. Every token launches with rules built in and an AI agent on a leash.</p>
-        <div class="cta-row">
-          <a href="launch.html" class="btn btn-primary">Launch a token</a>
-          <a href="tokens.html" class="btn btn-ghost">Browse tokens</a>
-        </div>
-        <a class="proofline" href="#hook">Devnet · 5 Oct 2026 · a buy over the cap · refused by the hook · 0x1770</a>
-        <p class="bait"><svg class="bait-ico" viewBox="1338 930 412 985" aria-hidden="true"><use href="#lure-fish"/></svg><span>I'm the bait. Follow me down.</span></p>
+  <main class="app leash-page">
+    <section class="wrap page-head">
+      <div>
+        <p class="kicker">The leash</p>
+        <h1 class="page-title">The leash<br><span class="accent">holds the agent.</span></h1>
+        <p class="page-lede">What this token's agent may do, what the leash answers when it tries more, and everything it did. Read from Solana by your browser, just now.</p>
+        <p class="src leash-id" id="leash-id"></p>
       </div>
     </section>
 
-    <section class="screen" id="hook" data-depth="hook">
-      <div class="screen-in">
-        <p class="bait"><svg class="bait-ico" viewBox="1338 930 412 985" aria-hidden="true"><use href="#lure-fish"/></svg><span>Every trade has to get past the hook.</span></p>
-        <h2>One rule here: no wallet holds more than 1%.</h2>
-        <div class="pills" role="group" aria-label="Replay the devnet run">
-          <button type="button" class="pill" data-play="under">Buy under the cap</button>
-          <button type="button" class="pill" data-play="over">Buy over the cap</button>
-          <button type="button" class="pill" data-play="sell">Sell</button>
-        </div>
-        <p class="readout" id="hook-out" aria-live="polite">Press one. Each replays a real swap on a Meteora curve.</p>
-        <figure class="cu">
-          <div class="cu-rule"><i></i></div>
-          <figcaption>The hook used <b>659</b> of the swap's <b>85,424</b> compute units.</figcaption>
-        </figure>
-        <p class="src">
-          Devnet, 5 Oct 2026 ·
-          <a href="https://explorer.solana.com/address/2zuHRx4bDF6EEmov8kKY8TEiLmxea53chrQYm7TkgBoY?cluster=devnet" target="_blank" rel="noopener">the pool</a> ·
-          <a href="https://explorer.solana.com/address/4akkPWLw1imyEhcqAJaHgPPrbDZr6VPaHPifVUV7K5tS?cluster=devnet" target="_blank" rel="noopener">the hook program</a>
-        </p>
-      </div>
-    </section>
+    <div class="wrap">
+      <p class="demo-banner"><b>Devnet only.</b> The leash program is not audited. No real money is behind anything on this page.</p>
+      <p class="leash-status" id="leash-status" role="status" aria-live="polite">Reading the leash from devnet…</p>
+      <noscript><p class="leash-status is-error">This page reads the leash from Solana inside your browser, so it needs JavaScript.</p></noscript>
 
-    <section class="screen" id="box" data-depth="box">
-      <div class="screen-in">
-        <p class="bait"><svg class="bait-ico" viewBox="1338 930 412 985" aria-hidden="true"><use href="#lure-fish"/></svg><span>Pick what I'm hooked to.</span></p>
-        <h2>13 hooks. Three live on devnet.</h2>
-        <div class="box" id="box-list">
-          <noscript><p class="fact">Games, access rules, guards and oracle triggers. <a href="launch.html">See them all on the launch page.</a></p></noscript>
-        </div>
-        <div class="card" id="box-card" aria-live="polite" hidden></div>
-        <div class="curves">
-          <span class="curves-k">Each token picks its curve</span>
-          <button type="button" class="pill pill-s" data-curve="grad" aria-pressed="false">Graduates</button>
-          <button type="button" class="pill pill-s" data-curve="inf" aria-pressed="false">Infinite bonding</button>
-        </div>
-        <p class="readout" id="curve-out" aria-live="polite"></p>
-      </div>
-    </section>
+      <section class="leash-sec" id="may" aria-labelledby="may-title" hidden>
+        <p class="bait"><svg class="bait-ico" viewBox="1338 930 412 985" aria-hidden="true"><use href="#lure-fish"/></svg><span id="bait-may">This is all the line I get.</span></p>
+        <h2 id="may-title">What it may do</h2>
+        <div class="card" id="limits"></div>
+      </section>
 
-    <section class="screen" id="agent" data-depth="agent">
-      <div class="screen-in">
-        <p class="bait"><svg class="bait-ico" viewBox="1338 930 412 985" aria-hidden="true"><use href="#lure-fish"/></svg><span>I go as far as the line lets me. So does every agent.</span></p>
-        <h2>The agent hosts the game. The leash holds the agent.</h2>
-        <p class="fact">Its whole job: feed the pot when the game goes quiet, and turn the clock. How much and how far is fixed at launch.</p>
-        <div class="pills" id="agent-pills" role="group" aria-label="Replay the leash run"></div>
-        <p class="readout" id="agent-out" aria-live="polite">Press one. Each is a real try on devnet.</p>
-        <p class="src">
-          <a href="agent.html">A live agent, read from Solana: try to break it</a> ·
-          <button type="button" class="linkish" id="run-open">the full run: 13 tries, 7 landed, 6 refused</button>
-        </p>
-      </div>
-    </section>
+      <section class="leash-sec" id="break" aria-labelledby="break-title" hidden>
+        <p class="bait"><svg class="bait-ico" viewBox="1338 930 412 985" aria-hidden="true"><use href="#lure-fish"/></svg><span id="bait-break">Pull as hard as you like.</span></p>
+        <h2 id="break-title">Try to break it</h2>
+        <p class="src leash-how" id="try-how"></p>
+        <div class="pills" id="tries" role="group" aria-label="Simulate a move against the leash"></div>
+        <p class="readout" id="try-out" aria-live="polite"></p>
+      </section>
 
-    <section class="screen screen-last" id="proof" data-depth="proof">
-      <div class="screen-in">
-        <p class="bait"><svg class="bait-ico" viewBox="1338 930 412 985" aria-hidden="true"><use href="#lure-fish"/></svg><span>This is what holds me up.</span></p>
-        <div class="slip">
-          <p class="slip-head">Lure · what exists today</p>
-          <dl>
-            <div><dt>Hook program</dt><dd><a href="https://explorer.solana.com/address/4akkPWLw1imyEhcqAJaHgPPrbDZr6VPaHPifVUV7K5tS?cluster=devnet" target="_blank" rel="noopener">4akk…K5tS</a> · devnet · 33 KB</dd></div>
-            <div><dt>Leash program</dt><dd><a href="https://explorer.solana.com/address/GrojbAndyBXQTo5GxgqXAmDDKjDWkPBPeGniBEQsa89p?cluster=devnet" target="_blank" rel="noopener">Groj…a89p</a> · devnet · 18 KB</dd></div>
-            <div><dt>Hook in a Meteora swap</dt><dd>659 of 85,424 compute units</dd></div>
-            <div><dt>Fee on launched tokens</dt><dd>1%: creator 0.4 · treasury 0.4 · Meteora 0.2</dd></div>
-            <div><dt>$LURE</dt><dd>3% fee per trade · not launched · no contract address yet</dd></div>
-            <div><dt>Audit</dt><dd>none · programs still upgradeable</dd></div>
-          </dl>
+      <section class="leash-sec" id="did" aria-labelledby="did-title" hidden>
+        <p class="bait"><svg class="bait-ico" viewBox="1338 930 412 985" aria-hidden="true"><use href="#lure-fish"/></svg><span>Every move I made is on the chain.</span></p>
+        <h2 id="did-title">What it did</h2>
+        <p class="src leash-how">Only what landed is listed, newest first. A refused move is stopped before it reaches the chain, so there is nothing to count.</p>
+        <ol class="runlog-list leash-log" id="log"></ol>
+        <p class="src leash-state" id="log-state" aria-live="polite"></p>
+        <button type="button" class="pill pill-s" id="log-more" hidden>More</button>
+      </section>
+
+      <form class="leash-find" action="agent.html" method="get">
+        <label class="field-label" for="leash-input">Look at another leash</label>
+        <div class="leash-find-row">
+          <input type="text" id="leash-input" name="leash" placeholder="Leash address" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+          <button type="submit" class="btn btn-small btn-ghost">Open</button>
         </div>
-        <div class="cta-row exits">
-          <a href="launch.html" class="btn btn-primary">Launch a token</a>
-          <a href="tokens.html" class="btn btn-ghost">Browse tokens</a>
-        </div>
-        <p class="src">
-          <a href="https://x.com/Lurepadfun" target="_blank" rel="noopener">@Lurepadfun on X</a> ·
-          Built on Solana, Token-2022 transfer hooks and Meteora bonding curves. Nothing here is financial advice.
-        </p>
-      </div>
-    </section>
+      </form>
+    </div>
   </main>
 
-  <dialog class="sheet" id="run-dialog" aria-labelledby="run-title">
-    <div class="sheet-top">
-      <h2 id="run-title">One leash, start to end</h2>
-      <form method="dialog"><button class="pill pill-s" value="close">Close</button></form>
-    </div>
-    <p class="src">A real run on devnet, 5 Oct 2026. Refused tries never became transactions.</p>
-    <ol class="runlog-list" id="runlog"></ol>
-    <a class="runlog-foot" href="https://explorer.solana.com/address/E5iPtSAUUMNaDgXqYPCMYt8rEti33pDUXZyw9EeqrNvb?cluster=devnet" target="_blank" rel="noopener">See this leash on the explorer</a>
-  </dialog>
+  <div class="stamp" id="stamp" aria-hidden="true"></div>
 
-  <script src="app.js"></script>
-  <script src="main.js"></script>
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span class="brand brand-small">
+        <svg class="mark" viewBox="730 420 1024 1544" aria-hidden="true"><use href="#lure-path"/></svg>
+        <span>LURE</span>
+      </span>
+      <p>Built on Solana · Token-2022 transfer hooks · Meteora bonding curves. Nothing here is financial advice.</p>
+      <a class="footer-link" href="https://x.com/Lurepadfun" target="_blank" rel="noopener">@Lurepadfun on X</a>
+    </div>
+  </footer>
+
+  <script src="agent.js"></script>
 </body>
 </html>
