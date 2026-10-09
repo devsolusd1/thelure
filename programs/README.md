@@ -2,13 +2,17 @@
 
 On-chain programs for Lure: the leash, which limits a token's AI agent, and the hook, which checks every transfer of a token.
 
-**Status: on devnet only, not audited.** Do not put real money behind them.
+**Status: on mainnet since 2026-10-09, not audited, still upgradeable.** Whoever holds the upgrade authority can change both programs.
 
 | | Leash | Hook |
 |---|---|---|
-| Devnet address | [`GrojbAndyBXQTo5GxgqXAmDDKjDWkPBPeGniBEQsa89p`](https://explorer.solana.com/address/GrojbAndyBXQTo5GxgqXAmDDKjDWkPBPeGniBEQsa89p?cluster=devnet) | [`4akkPWLw1imyEhcqAJaHgPPrbDZr6VPaHPifVUV7K5tS`](https://explorer.solana.com/address/4akkPWLw1imyEhcqAJaHgPPrbDZr6VPaHPifVUV7K5tS?cluster=devnet) (first version) |
-| Upgrade authority | `7f2MiAuyJ1Aaiheo9ctLgJmzGDWoDceyHEEuVB2mhPAA` (still upgradeable) | same |
-| Mainnet | not deployed | not deployed |
+| Address, the same on both clusters | [`GrojbAndyBXQTo5GxgqXAmDDKjDWkPBPeGniBEQsa89p`](https://explorer.solana.com/address/GrojbAndyBXQTo5GxgqXAmDDKjDWkPBPeGniBEQsa89p) | [`4akkPWLw1imyEhcqAJaHgPPrbDZr6VPaHPifVUV7K5tS`](https://explorer.solana.com/address/4akkPWLw1imyEhcqAJaHgPPrbDZr6VPaHPifVUV7K5tS) |
+| Mainnet | 18,352 bytes, sha256 `90a45dac6c571d72…` | 33,464 bytes, sha256 `8120ba820ff66404…`, built without the probe log |
+| Mainnet upgrade authority | `APEMKyXNYvHsjzX7xff25vqUJr7EefvCgDGMs5HwQWm2` | same |
+| Devnet | same code | same code, with the probe log the examples read |
+| Devnet upgrade authority | `7f2MiAuyJ1Aaiheo9ctLgJmzGDWoDceyHEEuVB2mhPAA` | same |
+
+Tokens launch on Meteora under one of two configs made by [examples/make-configs.mjs](examples/make-configs.mjs): a 1% fee in SOL, a start at 30 SOL of market cap, and either graduation at 420 SOL or none at all. On mainnet they are `DaVC7DGYA9fPvNy7fFRmMUrh4NFt1pkABBsUZvmxqQY` (graduating) and `FUaBd8sb3CBGjDFsws9VFtp1veZFnezoXVv3NHu9XmHi` (infinite bonding). [deploy.sh](deploy.sh) is how the programs got there.
 
 ## Hook
 

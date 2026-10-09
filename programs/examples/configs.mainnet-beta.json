@@ -1,0 +1,9 @@
+{
+  "cluster": "mainnet-beta",
+  "hook": "4akkPWLw1imyEhcqAJaHgPPrbDZr6VPaHPifVUV7K5tS",
+  "treasury": "APEMKyXNYvHsjzX7xff25vqUJr7EefvCgDGMs5HwQWm2",
+  "startMarketCap": 30,
+  "graduationMarketCap": 420,
+  "graduating": "DaVC7DGYA9fPvNy7fFRmMUrh4NFt1pkABBsUZvmxqQY",
+  "infinite": "FUaBd8sb3CBGjDFsws9VFtp1veZFnezoXVv3NHu9XmHi"
+}

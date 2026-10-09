@@ -10,6 +10,7 @@
 #   PAYER      its address, for a look at the costs before the key file is in place
 #   AUTHORITY  another address to hand the upgrade authority to once both are deployed
 #   RPC_URL    an RPC of your own; the public mainnet one often drops a deploy halfway
+#   PRIORITY   a price per compute unit, in micro-lamports, so the writes land on a busy cluster
 #
 # A deploy first writes the program into a buffer account of the same size, which is paid
 # back at the end: the wallet needs about twice the rent of the bigger program while it runs.
@@ -77,7 +78,8 @@ for i in 0 1; do
     fi
   fi
   echo "deploying ${names[$i]}..."
-  solana program deploy "$so" --program-id "${keys[$i]}" --url "$url" --keypair "$keypair" --max-sign-attempts 30
+  solana program deploy "$so" --program-id "${keys[$i]}" --url "$url" --keypair "$keypair" --max-sign-attempts 30 \
+    ${PRIORITY:+--with-compute-unit-price "$PRIORITY"}
   if [ -n "${AUTHORITY:-}" ]; then
     solana program set-upgrade-authority "$id" --new-upgrade-authority "$AUTHORITY" \
       --skip-new-upgrade-authority-signer-check --url "$url" --keypair "$keypair"
