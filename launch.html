@@ -65,14 +65,21 @@
 
         <section class="step" aria-labelledby="s1">
           <h2 class="step-title" id="s1"><span class="step-n">1</span>Your token</h2>
+          <p class="lp-note" id="host-note" hidden></p>
           <div class="token-row">
-            <div class="dropzone lp-avatar" id="avatar" aria-hidden="true">
-              <span class="dz-empty">
-                <svg class="mark" viewBox="730 420 1024 1544" aria-hidden="true"><use href="#lure-path"/></svg>
-                No image
-                <small>Paste a link below</small>
-              </span>
-              <img class="dz-img" id="dz-img" alt="" hidden>
+            <div class="field lp-image">
+              <button type="button" class="dropzone" id="avatar" aria-label="Token image: choose a file" aria-describedby="file-help">
+                <span class="dz-empty">
+                  <svg class="mark" viewBox="730 420 1024 1544" aria-hidden="true"><use href="#lure-path"/></svg>
+                  <span id="dz-words">Drop an image</span>
+                  <small id="dz-small">or choose a file</small>
+                </span>
+                <img class="dz-img" id="dz-img" alt="" hidden>
+              </button>
+              <input type="file" id="f-file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+              <button type="button" class="lp-remove" id="file-remove" hidden>Remove image</button>
+              <span class="field-help" id="file-help">PNG, JPG, WebP or GIF, up to 2 MB.</span>
+              <span class="field-error" role="alert" hidden></span>
             </div>
             <div>
               <label class="field">
@@ -87,17 +94,35 @@
               </label>
             </div>
           </div>
-          <label class="field">
+          <label class="field" id="image-field" hidden>
             <span class="field-label">Image link <span class="optional">optional</span></span>
             <input id="f-image" type="url" placeholder="https://…" autocomplete="off" autocapitalize="off" spellcheck="false">
-            <span class="field-help" id="image-help">An image that is already online. Lure does not host files.</span>
+            <span class="field-help" id="image-help">An image that is already online.</span>
             <span class="field-error" hidden></span>
           </label>
           <label class="field">
             <span class="field-label">Description <span class="optional">optional</span></span>
-            <textarea id="f-desc" maxlength="200" rows="3" placeholder="What's the story? One or two lines."></textarea>
+            <textarea id="f-desc" maxlength="1000" rows="4" placeholder="What's the story?"></textarea>
             <span class="field-help" id="meta-note"></span>
+            <span class="field-error" hidden></span>
           </label>
+          <div class="row3" id="links-row">
+            <label class="field">
+              <span class="field-label">Website <span class="optional">optional</span></span>
+              <input id="f-website" type="url" inputmode="url" maxlength="200" placeholder="https://…" autocomplete="off" autocapitalize="off" spellcheck="false">
+              <span class="field-error" hidden></span>
+            </label>
+            <label class="field">
+              <span class="field-label">X <span class="optional">optional</span></span>
+              <input id="f-twitter" type="url" inputmode="url" maxlength="200" placeholder="https://x.com/…" autocomplete="off" autocapitalize="off" spellcheck="false">
+              <span class="field-error" hidden></span>
+            </label>
+            <label class="field">
+              <span class="field-label">Telegram <span class="optional">optional</span></span>
+              <input id="f-telegram" type="url" inputmode="url" maxlength="200" placeholder="https://t.me/…" autocomplete="off" autocapitalize="off" spellcheck="false">
+              <span class="field-error" hidden></span>
+            </label>
+          </div>
         </section>
 
         <section class="step" aria-labelledby="s2">
@@ -163,6 +188,7 @@
       <p class="kicker" id="m-kicker">Review</p>
       <h2 id="modal-title">What you will sign.</h2>
       <p class="readout lp-out" id="m-status" aria-live="polite"></p>
+      <p class="lp-up" id="m-upload" hidden></p>
       <ol class="sign-steps lp-steps" id="sign-steps"></ol>
       <dl class="cost lp-cost" id="m-cost" hidden></dl>
       <p class="modal-error" id="modal-error" role="alert" hidden></p>

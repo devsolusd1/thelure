@@ -13,6 +13,7 @@
   const $ = (id) => document.getElementById(id);
   const el = {
     title: $("tk-title"), id: $("tk-id"), status: $("tk-status"), body: $("tk-body"),
+    pic: $("tk-pic"), about: $("tk-about"), links: $("tk-links"),
     game: $("tk-game"), gameK: $("tk-game-k"), clock: $("tk-clock"), state: $("tk-state"), pot: $("tk-pot"),
     leadK: $("tk-lead-k"), lead: $("tk-lead"), timer: $("tk-timer"), last: $("tk-last"),
     pay: $("tk-pay"), payBtn: $("tk-pay-btn"), payOut: $("tk-pay-out"),
@@ -88,6 +89,8 @@
   const state = {
     token: null, program: null, side: "buy", balances: null, quote: null, quoteError: "", quoteRun: 0,
     busy: false, failures: 0, timer: 0, quoteTimer: 0, stopped: false, sawOver: false,
+    metaAsking: false, // the token's metadata file is being read
+    broken: new Set(), // pictures that did not load
   };
 
   /* ================= Reading, again and again ================= */
@@ -107,6 +110,16 @@
       state.failures = 0;
       state.sawOver = false;
       render(token);
+      // The file the token's uri names is asked for apart from the token: the page never waits for it.
+      // Asking again on a later refresh is free. The chain layer fetches a link once, and one that
+      // did not answer (a gateway can be slow with a file pinned a moment ago) only after a wait.
+      if (!state.metaAsking && !chain.metadataFromUri(token.uri).ok) {
+        state.metaAsking = true;
+        chain.readMetadata(token.uri).then((meta) => {
+          state.metaAsking = false;
+          if (meta.ok && state.token && !state.stopped) about(state.token);
+        });
+      }
       note(`Read from ${esc(NET.cluster)} at ${esc(timeNow(token.readAt))}, slot ${esc(fmtInt(token.slot))}.`);
       balances();
       requote(false);
@@ -146,6 +159,7 @@
     const curve = token.graduated ? "Graduated" : token.curve === "infinite" ? "Infinite bonding" : "Graduating curve";
     setHtml(el.id, `${asked ? "Token" : "No token in the link, so this is the demo token:"} ${addr(token.mint)} on ${esc(NET.cluster)} · ${curve}`
       + (token.leash ? ` · <a href="agent.html?leash=${encodeURIComponent(token.leash)}">Its agent's leash</a>` : ""));
+    about(token);
 
     renderGame(token);
     setHtml(el.rules, rulesHtml(token, symbol));
@@ -162,6 +176,52 @@
     chrome();
     el.body.hidden = false;
   }
+
+  /* ================= What the token says about itself ================= */
+
+  // The same tile as on the board: the token's first letter, on a color its address picks.
+  const TILE_COLORS = [["#fd4b00", "#000"], ["#f6eee6", "#000"], ["#ff9a66", "#000"], ["#1a1715", "#fd4b00"]];
+  const hash = (s) => Array.from(s).reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7) >>> 0;
+  // Metadata is whatever the token's creator wrote. The chain layer only lets https links through; so does this.
+  const https = (link) => (typeof link === "string" && /^https:\/\//.test(link) ? link : "");
+  const outLink = (href, label) => `<a class="pill pill-s" href="${esc(href)}" target="_blank" rel="noopener noreferrer nofollow">${esc(label)}</a>`;
+
+  // Its picture, its description and its links, from the file its uri names. Until that file
+  // is read, and when it has no picture or the picture does not load, the tile is the letter.
+  function about(token) {
+    const meta = chain.metadataFromUri(token.uri);
+    const src = [meta.image, meta.imageAlt].find((link) => https(link) && !state.broken.has(link));
+    const letter = Array.from(token.symbol || token.name || "?")[0].toUpperCase();
+    const [bg, fg] = TILE_COLORS[hash(token.mint) % TILE_COLORS.length];
+    const pic = `<span class="tav-gen" style="background:${bg};color:${fg}">${esc(letter)}</span>`
+      + (src ? `<img src="${esc(src)}" alt="" decoding="async" referrerpolicy="no-referrer">` : "");
+    if (el.pic.__html !== pic) el.pic.classList.remove("has-img"); // the letter shows until the new picture has loaded
+    setHtml(el.pic, pic);
+    el.pic.hidden = false;
+
+    setText(el.about, meta.description);
+    el.about.hidden = !meta.description;
+
+    const links = [];
+    if (https(meta.website)) links.push(outLink(meta.website, new URL(meta.website).hostname.replace(/^www\./, "")));
+    if (https(meta.twitter)) {
+      // A profile is named; a post or anything else on X is just "X".
+      const handle = /^\/(\w{1,15})\/?$/.exec(new URL(meta.twitter).pathname);
+      links.push(outLink(meta.twitter, handle && !/^(i|home|search|explore|intent|share|hashtag)$/i.test(handle[1]) ? `@${handle[1]} on X` : "X"));
+    }
+    if (https(meta.telegram)) links.push(outLink(meta.telegram, "Telegram"));
+    setHtml(el.links, links.join(""));
+    el.links.hidden = !links.length;
+  }
+
+  // The picture arrives over the letter; one that does not load gives way to the same picture
+  // at another gateway, then to the letter. (Neither event bubbles: they are caught on the way down.)
+  el.pic.addEventListener("load", (event) => { if (event.target.tagName === "IMG") el.pic.classList.add("has-img"); }, true);
+  el.pic.addEventListener("error", (event) => {
+    if (event.target.tagName !== "IMG") return;
+    state.broken.add(event.target.getAttribute("src"));
+    if (state.token) about(state.token);
+  }, true);
 
   function renderGame(token) {
     const game = token.rules && token.rules.game;

@@ -6,6 +6,7 @@ import {
   cached, clockOf, CLOCK_SYSVAR, DBC_PROGRAM, DECIMALS, decodeLeash, decodeMint, decodeRules, hookProgram, key, leashProgram,
   LureError, meteora, need, net, poolAuthority, readAccounts, rentFor, RULES, rulesAddress, sol, SUPPLY, TOKEN_2022, tokens,
 } from "./core.mjs";
+import { metadataFromUri } from "./meta.mjs";
 
 const CURVES = ["graduating", "infinite"];
 
@@ -40,19 +41,6 @@ export function loadConfigs() {
 /* ---------------- Shaping what was read ---------------- */
 
 const share = (base) => Number(base) / Number(SUPPLY);
-
-/** The token's metadata uri, read without a network call when it is one of ours (a data: URI). */
-export function metadataFromUri(uri) {
-  const found = { description: "", image: "" };
-  const match = /^data:application\/json(;base64)?,(.*)$/s.exec(uri || "");
-  if (!match) return found;
-  try {
-    const json = JSON.parse(match[1] ? atob(match[2]) : decodeURIComponent(match[2]));
-    if (typeof json.description === "string") found.description = json.description.slice(0, 500);
-    if (typeof json.image === "string" && /^https?:\/\//i.test(json.image)) found.image = json.image;
-  } catch { /* not ours: nothing to show */ }
-  return found;
-}
 
 // Everything the site says about a token, from the accounts as read. `leash` may be missing
 // (the board does not read leashes): numbers that live there are then null.
@@ -126,6 +114,8 @@ function shape({ mint, mintAccount, pool, poolAddress, config, rulesAccount, rul
     };
   }
 
+  // What is known of the metadata at this moment, without asking anyone: reading a token never
+  // waits for the file its uri names (see meta.mjs).
   const meta = metadataFromUri(info.uri);
   return {
     mint: mint.toBase58(),

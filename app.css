@@ -338,6 +338,25 @@ input[type="range"] { width: 100%; accent-color: var(--orange); }
 .tk-status { margin: 0 0 36px; max-width: 760px; min-height: 1.6em; font: 500 13px/1.6 var(--mono); color: var(--muted); }
 .tk-status.is-error { padding: 14px 16px; border: 1.5px dashed var(--cream); border-radius: 10px; font-size: 14px; color: var(--cream); }
 
+/* the head: the token's picture beside its name, as tall as the name's two lines, then what
+   its metadata says. The letter tile is under the picture and shows until the picture has loaded. */
+.tk-head { min-width: 0; max-width: 100%; }
+.tk-top { display: flex; align-items: flex-start; gap: clamp(14px, 2.2vw, 26px); margin-bottom: 18px; }
+.tk-top .page-title { min-width: 0; margin-bottom: 0; overflow-wrap: anywhere; }
+.tk-pic {
+  position: relative; flex: none; width: clamp(84px, 13vw, 170px); aspect-ratio: 1; overflow: hidden;
+  border-radius: var(--radius); border: 1.5px solid var(--line-strong); background: var(--surface);
+}
+.tk-pic .tav-gen { font-size: clamp(44px, 7vw, 92px); }
+.tk-pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
+.tk-pic.has-img img { opacity: 1; }
+.tk-pic.has-img .tav-gen { visibility: hidden; }
+.tk-about { margin: 18px 0 0; max-width: 62ch; font-size: 17px; line-height: 1.55; color: var(--soft); white-space: pre-line; overflow-wrap: anywhere; }
+.tk-links { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; }
+.tk-links .pill { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tk-links .pill::after { content: " ↗"; font-family: var(--mono); color: var(--orange); }
+.tk-links .pill:hover { color: var(--orange); }
+
 .tk-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 60px 36px; align-items: start; margin-bottom: 76px; }
 .tk-grid > * { grid-column: 1; min-width: 0; }
 .tk-grid h2 { font-size: clamp(30px, 3.6vw, 48px); max-width: none; margin-bottom: 18px; }
@@ -452,6 +471,12 @@ input[type="range"] { width: 100%; accent-color: var(--orange); }
 .bd-card h3 a::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius); }
 .bd-card h3 a:focus-visible { outline: none; }
 .bd-card h3 a:focus-visible::after { outline: 2px solid var(--orange); outline-offset: 3px; }
+/* the letter tile is under the picture and shows until the picture has loaded */
+.bd-card .tav { position: relative; background: var(--surface-2); }
+.bd-card .tav img { position: absolute; inset: 0; opacity: 0; }
+.bd-card .tav.has-img img { opacity: 1; }
+.bd-card .tav.has-img .tav-gen { visibility: hidden; }
+.bd-card .tdesc { overflow-wrap: anywhere; }
 .bd-card .tstats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .bd-card .tstats dd { overflow-wrap: anywhere; }
 .bd-card .tstats small { font: 500 11px/1 var(--mono); color: var(--muted); }
@@ -470,7 +495,16 @@ input[type="range"] { width: 100%; accent-color: var(--orange); }
   border: 1.5px dashed var(--cream); border-radius: 10px; font: 500 14px/1.6 var(--mono); color: var(--cream);
 }
 
-/* step 1: the image is a link, shown where a file used to drop */
+/* step 1: the image is a file, dropped on the box or chosen through it. The box is a button. */
+.lp-image { align-content: start; }
+.lp-image .dropzone { font: inherit; }
+.lp-remove {
+  justify-self: start; padding: 6px 0; margin: -6px 0; border: 0; background: none; cursor: pointer;
+  font: 600 12px/1.45 var(--mono); color: var(--muted); text-decoration: underline; text-underline-offset: 3px;
+}
+.lp-remove:hover { color: var(--orange); }
+@media (max-width: 560px) { .lp-image { margin-bottom: 0; } }
+/* where nothing can be uploaded, the box only shows the image a link points to */
 .lp-avatar, .lp-avatar:hover { cursor: default; border-color: var(--line-strong); color: var(--muted); }
 .lp-avatar.has-img { border-style: solid; border-color: var(--orange); }
 
@@ -508,10 +542,12 @@ input[type="range"] { width: 100%; accent-color: var(--orange); }
 .lp-modal code { font-size: .92em; color: var(--cream); overflow-wrap: anywhere; }
 .lp-out { min-height: 0; max-width: none; margin-bottom: 20px; overflow-wrap: anywhere; }
 .lp-out[aria-busy="true"] { opacity: .75; }
+/* where the image and the details went, before the steps to sign */
+.lp-up { margin: 0 0 20px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; font: 500 12px/1.55 var(--mono); color: var(--soft); overflow-wrap: anywhere; }
 .lp-steps li > span { display: grid; gap: 4px; min-width: 0; }
 .lp-step-meta, .lp-step-state { font: 500 12px/1.5 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
 .lp-step-state { color: var(--soft); }
-.lp-steps a, .lp-out a { color: var(--orange); text-decoration: underline; text-underline-offset: 3px; }
+.lp-steps a, .lp-out a, .lp-up a { color: var(--orange); text-decoration: underline; text-underline-offset: 3px; }
 .lp-steps li.is-busy .lp-step-state { color: var(--text); }
 .lp-steps li.is-ok::before { background: var(--orange); color: #000; }
 .lp-steps li.is-ok .lp-step-state { color: var(--orange); font-weight: 700; }

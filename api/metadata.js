@@ -6,6 +6,8 @@
  * The request is one JSON object (Content-Type: application/json):
  *   { name, symbol, description, website, twitter, telegram, image: { type, data } | null }
  * `data` is the image file in base64. Everything but name and symbol may be left out.
+ * The body { check: true } pins nothing and answers { ready: true }: the launch form asks it
+ * once, when the page opens, to know whether it can offer an upload.
  *
  * THE KEY. The Pinata key (a JWT) is read from the environment variable PINATA_JWT and from
  * nowhere else. On Vercel: Project > Settings > Environment Variables, name PINATA_JWT, then
@@ -239,7 +241,9 @@ module.exports = async function metadata(req, res) {
     if (String(req.headers["content-type"] || "").split(";")[0].trim().toLowerCase() !== "application/json") {
       return answer(res, 415, { error: "json-only" });
     }
-    const token = check(await readJson(req));
+    const body = await readJson(req);
+    if (body && body.check === true) return answer(res, 200, { ready: true });
+    const token = check(body);
 
     const wait = mustWait(callerOf(req), Date.now());
     if (wait) {

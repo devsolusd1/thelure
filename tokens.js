@@ -109,6 +109,7 @@
       el.body.hidden = false;
       renderStats();
       render();
+      wantAgain();
       point();
       schedule(REFRESH);
     } catch (error) {
@@ -170,13 +171,20 @@
   const AVATAR_COLORS = [["#fd4b00", "#000"], ["#f6eee6", "#000"], ["#ff9a66", "#000"], ["#1a1715", "#fd4b00"]];
   const hash = (s) => Array.from(s).reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7) >>> 0;
 
+  // What the token's metadata says, as far as it is known now: a data: URI at once, a link once
+  // its file has been read (see want() below). Whatever it says was written by the token's creator.
+  const metaOf = (token) => chain.metadataFromUri(token.uri);
+  const https = (link) => typeof link === "string" && /^https:\/\//.test(link);
+
+  // The token's letter, and over it the picture when there is one: the letter shows until the
+  // picture has loaded, and stays when it does not.
   function avatar(token) {
-    if (token.image && !state.broken.has(token.image)) {
-      return `<img src="${esc(token.image)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">`;
-    }
+    const meta = metaOf(token);
+    const src = [meta.image, meta.imageAlt].find((link) => https(link) && !state.broken.has(link));
     const letter = Array.from(token.symbol || token.name || "?")[0].toUpperCase();
     const [bg, fg] = AVATAR_COLORS[hash(token.mint) % AVATAR_COLORS.length];
-    return `<span class="tav-gen" style="background:${bg};color:${fg}">${esc(letter)}</span>`;
+    return `<span class="tav-gen" style="background:${bg};color:${fg}">${esc(letter)}</span>`
+      + (src ? `<img src="${esc(src)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : "");
   }
 
   // The rules the token carries, as the board's small chips.
@@ -213,16 +221,17 @@
       + `<span class="tcurve-note">graduates at ${esc(fmtSol(token.graduation.sol))} SOL</span></div>`;
   }
 
-  function cardHtml(token) {
+  function cardHtml(token, picture) {
     const name = token.name || "Unnamed token";
+    const description = metaOf(token).description;
     // A graduated token no longer trades on its curve: the curve's last price is not its price.
     const numbers = token.graduated ? "" : `<dl class="tstats">`
       + `<div><dt>Market cap</dt><dd>${esc(fmtSol(token.marketCap))} <small>SOL</small></dd></div>`
       + `<div><dt>In the curve</dt><dd>${esc(fmtSol(token.solInCurve))} <small>SOL</small></dd></div></dl>`;
-    return `<header class="tcard-head"><div class="tav">${avatar(token)}</div><div class="tid">`
+    return `<header class="tcard-head"><div class="tav">${picture}</div><div class="tid">`
       + `<h3><a href="token.html?mint=${encodeURIComponent(token.mint)}"><span class="tname">${esc(name)}</span>${token.symbol ? ` <span class="ttick">$${esc(token.symbol)}</span>` : ""}</a></h3>`
       + `<p class="tby">${esc(short(token.mint))} · by ${esc(short(token.creator))}</p></div></header>`
-      + (token.description ? `<p class="tdesc">${esc(token.description)}</p>` : "")
+      + (description ? `<p class="tdesc">${esc(description)}</p>` : "")
       + `<div class="thooks">${chips(token)}</div>`
       + gameLine(token) + numbers + curveBlock(token);
   }
@@ -236,17 +245,53 @@
       node.className = "tcard bd-card";
       node.setAttribute("data-mint", token.mint);
       cards.set(token.mint, node);
+      if (near) near.observe(node); else want(token.mint);
     }
     node.classList.toggle("is-grad", token.graduated);
-    const html = cardHtml(token);
+    const picture = avatar(token);
+    const html = cardHtml(token, picture);
     if (node.__html !== html) {
       const focused = node.contains(document.activeElement);
+      // A picture that has not changed is not loaded again: its element is put back as it was.
+      const kept = node.__picture === picture ? node.querySelector(".tav") : null;
       node.__html = html;
+      node.__picture = picture;
       node.innerHTML = html;
+      if (kept) node.querySelector(".tav").replaceWith(kept);
       if (focused) { const link = node.querySelector("a"); if (link) link.focus(); }
     }
     return node;
   }
+
+  /* ================= Pictures and descriptions ================= */
+
+  // The file a token's uri names is asked for when its card comes near the screen, once, and
+  // the card is drawn again when the answer lands. The board never waits for it: a link that
+  // is slow or dead only leaves the letter on the card.
+  const seen = new Set(); // mints whose card has come near the screen
+  const asking = new Set(); // mints whose file is being read
+  function want(mint) {
+    seen.add(mint);
+    const token = state.byMint && state.byMint.get(mint);
+    if (!token || !token.uri || asking.has(mint) || metaOf(token).ok) return; // nothing to read, or known already
+    asking.add(mint);
+    chain.readMetadata(token.uri).then((meta) => {
+      asking.delete(mint);
+      const now = state.byMint.get(mint);
+      if (meta.ok && now && cards.has(mint)) { cardFor(now); tick(); }
+    });
+  }
+  // Asking again is free: the chain layer fetches a link once, and one that did not answer
+  // (a gateway can be slow with a file pinned a moment ago) only after a wait. So every read of
+  // the board asks again for the cards that have been near the screen and still have no file.
+  const wantAgain = () => { for (const mint of seen) want(mint); };
+  const near = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      near.unobserve(entry.target);
+      want(entry.target.getAttribute("data-mint"));
+    }
+  }, { rootMargin: "600px 0px" }) : null;
 
   /* ================= The page ================= */
 
@@ -350,7 +395,11 @@
     el.search.focus();
   });
   el.status.addEventListener("click", (event) => { if (event.target.closest("[data-retry]")) load(true); });
-  // A picture that does not load gives way to the token's letter. (The error event does not bubble: it is caught on the way down.)
+  // A picture covers the token's letter once it has loaded. One that does not load gives way to the
+  // same picture at another gateway, then to the letter. (Neither event bubbles: they are caught on the way down.)
+  el.board.addEventListener("load", (event) => {
+    if (event.target.tagName === "IMG" && event.target.parentElement) event.target.parentElement.classList.add("has-img");
+  }, true);
   el.board.addEventListener("error", (event) => {
     const img = event.target;
     if (!img || img.tagName !== "IMG") return;

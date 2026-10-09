@@ -5,6 +5,11 @@
  * cluster comes from window.LURE_NET (net.js). With no wallet, or while net.js still lacks a
  * value, the form works as a preview and says what is missing.
  *
+ * The token's image and details are pinned to IPFS by /api/metadata (api/metadata.js) when the
+ * review opens, and the launch writes the link it answers into the token. Where that function
+ * has no key, or is not there at all, the form goes back to a short text kept inside the token
+ * and an image that is a link.
+ *
  * Only what the hook program does today can be launched: the wallet cap, the per-block limit
  * with its guard, and Last Buyer Wins, optionally hosted by an agent on a leash. The rest of
  * the catalogue (app.js) stays visible, marked "Not live yet".
@@ -56,7 +61,9 @@
   const defaultsOf = (fields) => Object.fromEntries(fields.map((f) => [f.key, f.def]));
 
   const state = {
-    name: "", ticker: "", desc: "", image: "", imageOk: false,
+    name: "", ticker: "", desc: "", website: "", twitter: "", telegram: "",
+    file: null, fileUrl: "", fileStamp: "", // the picked image, its address in this page, and what tells it from another
+    image: "", imageOk: false, // the image link of the fallback, and whether an image is showing
     hooks: {}, // live hook id -> settings
     agentOn: false, agent: { key: "", ...defaultsOf(AGENT) },
     curve: "graduating", firstBuy: 0,
@@ -127,7 +134,18 @@
 
   /* ---------------- Step 1: the token ---------------- */
 
+  const API = "/api/metadata";
+  const MAX_IMAGE = 2 * 1024 * 1024; // the function's own cap
+  const MAX_DESC = 1000;
   const IMAGE_LINK = /^https?:\/\/\S+$/i;
+  // Whether this site can pin files. It can, until the function says otherwise.
+  const hosting = { on: true };
+  const HOST_NOTES = {
+    "not-configured": "Image uploads are not set up on this site yet: the image is a link, and the description is kept short inside the token.",
+    unavailable: "Image uploads are not available here: the image is a link, and the description is kept short inside the token.",
+  };
+  const UPLOAD_NOTE = "The image and these details go to IPFS when you open the review, and are public from then on.";
+
   function bindText(id, key, transform) {
     const el = $(id);
     el.addEventListener("input", () => {
@@ -144,32 +162,163 @@
   bindText("#f-ticker", "ticker", (v) => v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10));
   bindText("#f-desc", "desc");
 
-  // The image is a link, since the page has nowhere to put a file. It shows here once it loads.
-  const avatar = $("#avatar"), dzImg = $("#dz-img"), imageInput = $("#f-image"), imageHelp = $("#image-help");
-  const IMAGE_HELP = imageHelp.textContent;
-  function showImage(ok) {
-    state.imageOk = ok;
-    dzImg.hidden = !ok;
-    avatar.classList.toggle("has-img", ok);
+  /* The links, kept as they will be stored: a handle or a bare address becomes the whole
+   * https link, and the field shows it on the way out. */
+  const LINKS = {
+    website: { el: $("#f-website"), bad: "A link like https://example.com, with no spaces." },
+    twitter: { el: $("#f-twitter"), hosts: ["x.com", "twitter.com"], bad: "A link to X, like https://x.com/name." },
+    telegram: { el: $("#f-telegram"), hosts: ["t.me", "telegram.me"], bad: "A link to Telegram, like https://t.me/name." },
+  };
+  function fullLink(key, value) {
+    let text = value.trim();
+    if (!text) return "";
+    if (key === "twitter" && /^@?\w{1,15}$/.test(text)) text = `x.com/${text.replace(/^@/, "")}`;
+    if (key === "telegram" && /^@?\w{4,32}$/.test(text)) text = `t.me/${text.replace(/^@/, "")}`;
+    return /^https?:\/\//i.test(text) ? text.replace(/^http:/i, "https:") : `https://${text}`;
   }
-  dzImg.addEventListener("load", () => { showImage(true); imageHelp.textContent = IMAGE_HELP; refresh(); });
+  // The same check the function makes.
+  function linkOk(key, link) {
+    if (!link) return true;
+    if (link.length > 200 || /\s/.test(link) || !/^https:\/\//i.test(link)) return false;
+    let url;
+    try { url = new URL(link); } catch { return false; }
+    const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    return !url.username && !url.password && host.includes(".") && (!LINKS[key].hosts || LINKS[key].hosts.includes(host));
+  }
+  for (const [key, { el }] of Object.entries(LINKS)) {
+    el.addEventListener("input", () => { state[key] = fullLink(key, el.value); clearError(el); });
+    el.addEventListener("change", () => { el.value = state[key]; });
+  }
+
+  /* The image: a file, dropped on the box or chosen through it, shown at once and pinned when
+   * the review opens. Where nothing can be uploaded the box shows the image a link points to. */
+  const avatar = $("#avatar"), dzImg = $("#dz-img"), fileInput = $("#f-file"), fileRemove = $("#file-remove");
+  const imageInput = $("#f-image"), imageHelp = $("#image-help");
+  const IMAGE_HELP = imageHelp.textContent;
+
+  function paintImage() {
+    dzImg.hidden = !state.imageOk;
+    avatar.classList.toggle("has-img", state.imageOk);
+    fileRemove.hidden = !state.file;
+    avatar.setAttribute("aria-label", !hosting.on ? "Token image" : state.file ? `Token image: ${state.file.name}. Choose another file` : "Token image: choose a file");
+  }
+
+  // What a file is, by its first bytes: the function checks the same and refuses the rest.
+  async function isImage(file) {
+    const head = String.fromCharCode(...new Uint8Array(await file.slice(0, 12).arrayBuffer()));
+    return head.startsWith("\x89PNG\r\n\x1a\n") || head.startsWith("\xff\xd8\xff") || head.startsWith("GIF87a") || head.startsWith("GIF89a")
+      || (head.startsWith("RIFF") && head.slice(8, 12) === "WEBP");
+  }
+
+  function dropFile() {
+    if (state.fileUrl) URL.revokeObjectURL(state.fileUrl);
+    Object.assign(state, { file: null, fileUrl: "", fileStamp: "", imageOk: false });
+    dzImg.removeAttribute("src");
+    fileInput.value = "";
+  }
+
+  async function takeFile(file) {
+    if (!file || !hosting.on) return;
+    clearError(avatar);
+    let ok = false;
+    try { ok = await isImage(file); } catch { /* it cannot be read: not an image */ }
+    if (!ok) return setError(avatar, "That file is not a PNG, JPG, WebP or GIF.");
+    if (file.size > MAX_IMAGE) return setError(avatar, `That image is ${(file.size / 1048576).toFixed(2)} MB. 2 MB is the most.`);
+    dropFile();
+    Object.assign(state, { file, fileUrl: URL.createObjectURL(file), fileStamp: [file.name, file.size, file.lastModified].join("|"), imageOk: true });
+    dzImg.src = state.fileUrl;
+    paintImage();
+    refresh();
+  }
+
+  avatar.addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", () => takeFile(fileInput.files[0]));
+  fileRemove.addEventListener("click", () => {
+    dropFile();
+    clearError(avatar);
+    paintImage();
+    refresh();
+    avatar.focus();
+  });
+  const carriesFiles = (e) => !!e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files");
+  avatar.addEventListener("dragover", (e) => {
+    if (!carriesFiles(e) || !hosting.on) return;
+    e.preventDefault();
+    avatar.classList.add("is-over");
+  });
+  avatar.addEventListener("dragleave", () => avatar.classList.remove("is-over"));
+  avatar.addEventListener("drop", (e) => {
+    avatar.classList.remove("is-over");
+    if (!carriesFiles(e)) return;
+    e.preventDefault();
+    takeFile(e.dataTransfer.files[0]);
+  });
+  // A file dropped beside the box would open in place of this page, and the form would be gone.
+  for (const type of ["dragover", "drop"]) window.addEventListener(type, (e) => { if (carriesFiles(e)) e.preventDefault(); });
+
+  dzImg.addEventListener("load", () => {
+    state.imageOk = true;
+    if (!state.file) imageHelp.textContent = IMAGE_HELP;
+    paintImage();
+    refresh();
+  });
   dzImg.addEventListener("error", () => {
-    showImage(false);
-    if (state.image.trim()) imageHelp.textContent = "That link did not load as an image in this browser. It is stored as written.";
+    if (state.file) {
+      dropFile();
+      setError(avatar, "That file could not be read as an image.");
+    } else {
+      state.imageOk = false;
+      if (state.image.trim()) imageHelp.textContent = "That link did not load as an image in this browser. It is stored as written.";
+    }
+    paintImage();
     refresh();
   });
   imageInput.addEventListener("input", () => {
     state.image = imageInput.value;
     clearError(imageInput);
-    showImage(false);
+    state.imageOk = false;
     imageHelp.textContent = IMAGE_HELP;
     const link = state.image.trim();
-    if (IMAGE_LINK.test(link)) dzImg.src = link; else dzImg.removeAttribute("src");
+    if (!hosting.on && IMAGE_LINK.test(link)) dzImg.src = link; else dzImg.removeAttribute("src");
+    paintImage();
     refresh();
   });
 
-  // What the mint will really carry: the description is cut, then dropped, to fit in 200 bytes.
+  // Nothing can be pinned from here: back to the image as a link and a short text inside the token.
+  function noHosting(why) {
+    if (!hosting.on) return;
+    hosting.on = false;
+    dropFile();
+    clearError(avatar);
+    $("#host-note").textContent = HOST_NOTES[why];
+    $("#host-note").hidden = false;
+    $("#image-field").hidden = false;
+    $("#links-row").hidden = true;
+    $("#file-help").hidden = true;
+    $("#f-desc").maxLength = 200;
+    avatar.disabled = true;
+    avatar.classList.add("lp-avatar");
+    $("#dz-words").textContent = "No image";
+    $("#dz-small").textContent = "Paste a link below";
+    paintImage();
+    refresh();
+  }
+
+  // Asked once, as the page opens: nothing is sent and nothing is pinned. The function answers
+  // { ready: true }, or "not-configured" while it has no key. A host with no function answers neither.
+  async function askHosting() {
+    try {
+      const res = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: '{"check":true}' });
+      const data = await res.json().catch(() => null);
+      if (res.status === 503 && data && data.error === "not-configured") noHosting("not-configured");
+      else if ((res.ok && !(data && data.ready === true)) || [403, 404, 405].includes(res.status)) noHosting("unavailable");
+    } catch { /* offline, or opened as a file: the review says so when it tries */ }
+  }
+
+  // What the token will carry. With uploads, all of it, behind a link. Without, what fits in
+  // 200 bytes inside the mint: the description is cut, then dropped.
   function stored() {
+    if (hosting.on) return { description: state.desc.trim(), image: state.fileUrl, note: UPLOAD_NOTE };
     const words = { name: state.name.trim(), symbol: state.ticker, description: state.desc, image: IMAGE_LINK.test(state.image.trim()) ? state.image.trim() : "" };
     const clean = state.desc.replace(/\s+/g, " ").trim();
     if (!chain) return { description: clean, image: words.image, note: "" };
@@ -460,7 +609,10 @@
   }
   function launchParams(creator) {
     return {
-      creator, name: state.name.trim(), symbol: state.ticker, description: state.desc, image: state.image.trim(), curve: state.curve,
+      creator, name: state.name.trim(), symbol: state.ticker,
+      // With uploads the token carries a link, added at review. Without, the words themselves.
+      ...(hosting.on ? {} : { description: state.desc, image: state.image.trim() }),
+      curve: state.curve,
       rules: rulesInput(),
       ...(agentActive() ? { agent: agentInput(state.agent.key) } : {}),
       ...(state.firstBuy > 0 ? { firstBuy: { sol: state.firstBuy } } : {}),
@@ -591,7 +743,12 @@
     const nameBytes = new TextEncoder().encode(state.name.trim()).length;
     if (check(nameBytes > 0, $("#f-name"), "Give your token a name.")) check(nameBytes <= 32, $("#f-name"), "Too long: a name is 32 bytes at most.");
     check(/^[A-Z0-9]{2,10}$/.test(state.ticker), $("#f-ticker"), "2 to 10 letters or numbers.");
-    check(!state.image.trim() || IMAGE_LINK.test(state.image.trim()), imageInput, "A link that starts with https://, with no spaces.");
+    if (hosting.on) {
+      check(state.desc.trim().length <= MAX_DESC, $("#f-desc"), "1,000 characters at most.");
+      for (const [key, { el: input, bad: words }] of Object.entries(LINKS)) check(linkOk(key, state[key]), input, words);
+    } else {
+      check(!state.image.trim() || IMAGE_LINK.test(state.image.trim()), imageInput, "A link that starts with https://, with no spaces.");
+    }
 
     for (const id of Object.keys(state.hooks)) {
       for (const f of LIVE[id]) check(inRange(f, state.hooks[id][f.key]), settingEl(id, f.key), rangeWords(f));
@@ -616,12 +773,13 @@
 
   const modal = $("#modal"), card = $("#modal-card");
   const el = {
-    kicker: $("#m-kicker"), title: $("#modal-title"), status: $("#m-status"), steps: $("#sign-steps"), cost: $("#m-cost"),
+    kicker: $("#m-kicker"), title: $("#modal-title"), status: $("#m-status"), upload: $("#m-upload"), steps: $("#sign-steps"), cost: $("#m-cost"),
     error: $("#modal-error"), tryForm: $("#m-try"), tryInput: $("#m-address"), done: $("#m-done"), go: $("#m-go"), close: $("#m-close"),
     stamp: $("#stamp"),
   };
-  // stage: closed | idle (nothing to sign) | building | ready | sending | failed | done
-  const flow = { stage: "closed", run: 0, creator: "", tryAddress: "", params: null, built: null, steps: [], cost: null, failedAt: 0, landed: 0 };
+  // stage: closed | idle (nothing to sign) | uploading | building | ready | sending | failed | done
+  // retry: the upload did not go through, and the button tries the review again.
+  const flow = { stage: "closed", run: 0, creator: "", tryAddress: "", params: null, built: null, steps: [], cost: null, failedAt: 0, landed: 0, retry: false };
   let lastFocus = null;
 
   const PROGRAMS = {
@@ -641,6 +799,64 @@
   function trouble(html) {
     el.error.innerHTML = html;
     el.error.hidden = !html;
+  }
+  // Where the token's details went, under the status line.
+  function uploadLine(html) {
+    el.upload.innerHTML = html;
+    el.upload.hidden = !html;
+  }
+
+  /* ---------------- The image and the details, pinned before anything is built ---------------- */
+
+  // What was pinned last, and for which image and details: the same ones are not sent twice.
+  let pinned = null;  // { key, uri, image }
+  let pinning = null; // { key, promise }: an upload on its way
+  const details = () => ({ name: state.name.trim(), symbol: state.ticker, description: state.desc.trim(), website: state.website, twitter: state.twitter, telegram: state.telegram });
+  const detailsKey = () => JSON.stringify([details(), state.fileStamp]);
+
+  const base64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).replace(/^[^,]*,/, ""));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+  const uploadError = (kind, message) => Object.assign(new Error(message), { kind });
+
+  // One call to the function. Answers { uri, image }, or throws what went wrong in plain words.
+  async function sendDetails(words, file) {
+    let res;
+    try {
+      const image = file ? { type: file.type, data: await base64(file) } : null;
+      res = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...words, image }) });
+    } catch {
+      throw uploadError("network", "This page could not reach the upload. Check your connection and try again.");
+    }
+    const data = await res.json().catch(() => null);
+    const code = data && data.error;
+    if (res.ok && data && /^https:\/\/\S+$/.test(data.uri || "")) return { uri: data.uri, image: data.image || "" };
+    if (code === "not-configured") throw uploadError("not-configured", "");
+    if (code === "bad-origin" || res.status === 404 || res.status === 405) throw uploadError("unavailable", "");
+    if (code === "bad-request") throw uploadError("refused", data.message || "The upload was refused.");
+    if (code === "slow-down") {
+      const wait = Number(data.retryAfter) || 60;
+      throw uploadError("refused", `Too many uploads from this connection. Try again in ${wait > 90 ? `${Math.ceil(wait / 60)} minutes` : `${wait} seconds`}.`);
+    }
+    if (code === "too-large" || res.status === 413) throw uploadError("refused", "The image is too large to send. 2 MB is the most.");
+    if (code === "upload-failed") {
+      throw uploadError("failed", `The pinning service did not take the ${data.step === "metadata" ? "details" : "image"}${data.status ? ` (it answered ${data.status})` : ""}. Try again in a moment.`);
+    }
+    throw uploadError("failed", `The upload did not go through (${res.status}). Try again in a moment.`);
+  }
+
+  function pin() {
+    const key = detailsKey();
+    if (pinned && pinned.key === key) return Promise.resolve(pinned);
+    if (pinning && pinning.key === key) return pinning.promise;
+    const promise = sendDetails(details(), state.file)
+      .then((got) => (pinned = { key, ...got }))
+      .finally(() => { if (pinning && pinning.promise === promise) pinning = null; });
+    pinning = { key, promise };
+    return promise;
   }
 
   // What one transaction does, in a sentence. `b` is what the builder returned, once there is one.
@@ -704,12 +920,14 @@
     const left = flow.steps.length - flow.failedAt;
     el.go.hidden = s === "done" || !!notReady;
     el.go.textContent = s === "sending" ? "Working…"
+      : s === "uploading" ? "Uploading…"
       : s === "building" ? "Checking…"
       : s === "failed" ? (flow.landed ? `Try the ${left === 1 ? "last step" : `last ${left} steps`} again` : "Try again")
+      : flow.retry ? "Try again"
       : !wallet ? "Connect wallet"
       : "Sign and launch";
-    el.go.disabled = s === "sending" || s === "building"
-      || (!!wallet && s !== "failed" && !(s === "ready" && c && c.ok && c.enough && wallet.address === flow.creator));
+    el.go.disabled = s === "sending" || s === "building" || s === "uploading"
+      || (!flow.retry && !!wallet && s !== "failed" && !(s === "ready" && c && c.ok && c.enough && wallet.address === flow.creator));
     el.close.disabled = s === "sending";
     el.close.textContent = s === "done" ? "Close" : s === "failed" && flow.landed ? "Close" : "Keep editing";
   }
@@ -792,11 +1010,12 @@
     const run = ++flow.run;
     const wallet = wallets && wallets.current();
     const creator = wallet ? wallet.address : flow.tryAddress;
-    Object.assign(flow, { stage: "idle", creator: creator || "", params: null, built: null, cost: null, failedAt: 0, landed: 0, steps: plannedSteps() });
+    Object.assign(flow, { stage: "idle", creator: creator || "", params: null, built: null, cost: null, failedAt: 0, landed: 0, retry: false, steps: plannedSteps() });
     head("Review", "What you will sign.");
     el.done.hidden = true;
     el.tryForm.hidden = !!wallet || !!notReady;
     trouble("");
+    uploadLine("");
     paintSteps();
     paintCost();
     buttons();
@@ -807,11 +1026,42 @@
         : "No wallet found in this browser. Install Phantom, Solflare or Backpack, or open this page inside your wallet's browser.");
     }
 
+    // First the image and the details: the launch is built around the link they get.
+    let uri = "";
+    if (hosting.on) {
+      // The same image and details as last time are already there: nothing is sent again.
+      if (!(pinned && pinned.key === detailsKey())) {
+        flow.stage = "uploading";
+        buttons();
+        say(state.file ? "Uploading the image and the token's details…" : "Uploading the token's details…", true);
+      }
+      try {
+        const got = await pin();
+        if (run !== flow.run) return;
+        uri = got.uri;
+        uploadLine(`${got.image ? "The image and the details are" : "The details are"} on IPFS: <a href="${esc(uri)}" target="_blank" rel="noopener">${esc(uri)}</a>`);
+      } catch (error) {
+        if (run !== flow.run) return;
+        if (error.kind !== "not-configured" && error.kind !== "unavailable") {
+          flow.stage = "idle";
+          flow.retry = true;
+          say(`<span class="no">Not uploaded.</span> ${esc(error.message)} Nothing was built or sent.`);
+          return buttons();
+        }
+        // No uploads here after all: the form says so, and this launch keeps its words in the token.
+        const picked = !!state.file;
+        noHosting(error.kind);
+        flow.steps = plannedSteps();
+        paintSteps();
+        uploadLine(`${esc(HOST_NOTES[error.kind])}${picked ? " The image you picked is not used." : ""}`);
+      }
+    }
+
     flow.stage = "building";
     buttons();
     say(`Building the transactions for ${addr(creator)}…`, true);
     try {
-      const params = launchParams(creator);
+      const params = { ...launchParams(creator), ...(uri ? { uri } : {}) };
       const built = await chain.buildLaunch(params);
       if (run !== flow.run) return;
       Object.assign(flow, { params, built });
@@ -986,6 +1236,7 @@
   });
 
   el.go.addEventListener("click", async () => {
+    if (flow.retry) return prepare();
     if (wallets.current()) return sign();
     // No wallet yet: connect the one there is. With several, the choice is made in the strip above.
     try {
@@ -1032,11 +1283,13 @@
     wallets.on(() => {
       $("#side-missing").textContent = sideMissing();
       // A review that is open follows the wallet, unless a launch is under way or half landed.
-      if (!modal.hidden && (flow.stage === "idle" || flow.stage === "ready" || flow.stage === "building" || (flow.stage === "failed" && !flow.landed))) prepare();
+      if (!modal.hidden && (flow.stage === "idle" || flow.stage === "ready" || flow.stage === "uploading" || flow.stage === "building" || (flow.stage === "failed" && !flow.landed))) prepare();
       else if (!modal.hidden) buttons();
     });
   }
 
+  paintImage();
   refresh();
+  askHosting();
   if (!notReady) readCurves(true);
 })();
