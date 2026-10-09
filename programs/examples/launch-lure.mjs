@@ -9,7 +9,10 @@
 //   GRAD_USD     market cap at which it graduates to a Meteora pool, in dollars (default 60000)
 //   SOL_USD      the SOL price to convert with; read from Jupiter when not given
 //   FEE_BPS      fee per trade, on the curve and in the pool after it (default 300 = 3%)
-//   URI          the token's metadata (default: the file pinned to IPFS for it)
+//   START_FEE_BPS  a higher fee the curve opens with, against snipers (default: none)
+//   DECAY_SECONDS  how long it takes to come down to FEE_BPS, in a straight line (default 60)
+//   OUT          the file the addresses are written to (default lure.<cluster>.json)
+//   URI         the token's metadata (default: the file pinned to IPFS for it)
 //   MINT_KEYPAIR a key file for the token's address, if one was made beforehand
 //   PRIORITY     a price per compute unit, in micro-lamports, so it lands on a busy cluster (default 50000)
 //
@@ -33,6 +36,10 @@ const KEYPAIR = home(process.env.KEYPAIR ?? "~/.config/solana/id.json");
 const START_USD = Number(process.env.START_USD ?? 8000);
 const GRAD_USD = Number(process.env.GRAD_USD ?? 60000);
 const FEE_BPS = Number(process.env.FEE_BPS ?? 300);
+const START_FEE_BPS = Number(process.env.START_FEE_BPS ?? FEE_BPS);
+const DECAY_SECONDS = Number(process.env.DECAY_SECONDS ?? 60);
+const decays = START_FEE_BPS > FEE_BPS;
+const OUT = process.env.OUT ?? `lure.${CLUSTER}.json`;
 const TOKEN = { name: "LurePad", symbol: "LURE", uri: process.env.URI ?? "https://gateway.pinata.cloud/ipfs/bafkreifocdvdl4ldjevlh4q2a3dtd3rqvdtctjc6kcyuzv3l6qwan6xcnu" };
 const SUPPLY = 1_000_000_000;
 
@@ -66,6 +73,7 @@ console.log(`metadata  ${TOKEN.uri}`);
 console.log(`SOL       $${count(price)}`);
 console.log(`curve     starts at $${count(START_USD, 0)} of market cap (${count(start)} SOL), graduates at $${count(GRAD_USD, 0)} (${count(grad)} SOL)`);
 console.log(`fee       ${FEE_BPS / 100}% per trade, in SOL; Meteora keeps a fifth of it, the rest is the owner's to claim`);
+if (decays) console.log(`          it opens at ${START_FEE_BPS / 100}% and comes down to ${FEE_BPS / 100}% over the first ${DECAY_SECONDS} seconds, for every buyer and seller`);
 
 // The site has to be serving the metadata before the token exists: terminals read it at once.
 const metadata = await fetch(TOKEN.uri).then((r) => (r.ok ? r.json() : null)).catch(() => null);
@@ -84,7 +92,11 @@ const config = buildCurveWithMarketCap({
   fee: {
     baseFeeParams: {
       baseFeeMode: BaseFeeMode.FeeSchedulerLinear,
-      feeSchedulerParam: { startingFeeBps: FEE_BPS, endingFeeBps: FEE_BPS, numberOfPeriod: 0, totalDuration: 0 },
+      // With an opening fee: one step a second, so it falls in a straight line from the
+      // moment the pool opens.
+      feeSchedulerParam: decays
+        ? { startingFeeBps: START_FEE_BPS, endingFeeBps: FEE_BPS, numberOfPeriod: DECAY_SECONDS, totalDuration: DECAY_SECONDS }
+        : { startingFeeBps: FEE_BPS, endingFeeBps: FEE_BPS, numberOfPeriod: 0, totalDuration: 0 },
     },
     dynamicFeeEnabled: false,
     collectFeeMode: CollectFeeMode.QuoteToken,
@@ -111,7 +123,8 @@ const config = buildCurveWithMarketCap({
     totalLockedVestingAmount: 0, numberOfVestingPeriod: 0, cliffUnlockAmount: 0,
     totalVestingDuration: 0, cliffDurationFromMigrationTime: 0,
   },
-  activationType: ActivationType.Slot,
+  // The decay is counted in seconds, so the pool keeps time by the clock when there is one.
+  activationType: decays ? ActivationType.Timestamp : ActivationType.Slot,
   initialMarketCap: start,
   migrationMarketCap: grad,
 });
@@ -155,8 +168,9 @@ if (!SEND) {
   const out = {
     cluster: CLUSTER, mint: mint.publicKey.toBase58(), pool: pool.toBase58(), config: configKey.publicKey.toBase58(),
     owner: owner.toBase58(), solUsdAtLaunch: price, startUsd: START_USD, graduationUsd: GRAD_USD, feeBps: FEE_BPS,
+    ...(decays ? { startFeeBps: START_FEE_BPS, decaySeconds: DECAY_SECONDS } : {}),
   };
-  writeFileSync(new URL(`./lure.${CLUSTER}.json`, import.meta.url), `${JSON.stringify(out, null, 2)}\n`);
+  writeFileSync(new URL(`./${OUT}`, import.meta.url), `${JSON.stringify(out, null, 2)}\n`);
   console.log(`\n$LURE is live.\n   contract address  ${out.mint}\n   pool              ${out.pool}\n   ${signature}`);
-  console.log(`   cost: ${count(sol(before - (await connection.getBalance(owner))), 4)} SOL. Written to lure.${CLUSTER}.json.`);
+  console.log(`   cost: ${count(sol(before - (await connection.getBalance(owner))), 4)} SOL. Written to ${OUT}.`);
 }
