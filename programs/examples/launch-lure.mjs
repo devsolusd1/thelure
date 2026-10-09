@@ -9,7 +9,7 @@
 //   GRAD_USD     market cap at which it graduates to a Meteora pool, in dollars (default 60000)
 //   SOL_USD      the SOL price to convert with; read from Jupiter when not given
 //   FEE_BPS      fee per trade, on the curve and in the pool after it (default 300 = 3%)
-//   URI          the token's metadata (default: the file this site serves)
+//   URI          the token's metadata (default: the file pinned to IPFS for it)
 //   MINT_KEYPAIR a key file for the token's address, if one was made beforehand
 //
 // The curve is priced in SOL, so the dollar figures hold at the SOL price of the moment the
@@ -32,7 +32,7 @@ const KEYPAIR = home(process.env.KEYPAIR ?? "~/.config/solana/id.json");
 const START_USD = Number(process.env.START_USD ?? 8000);
 const GRAD_USD = Number(process.env.GRAD_USD ?? 60000);
 const FEE_BPS = Number(process.env.FEE_BPS ?? 300);
-const TOKEN = { name: "LurePad", symbol: "LURE", uri: process.env.URI ?? "https://www.lurepad.fun/assets/lure.json" };
+const TOKEN = { name: "LurePad", symbol: "LURE", uri: process.env.URI ?? "https://gateway.pinata.cloud/ipfs/bafkreifocdvdl4ldjevlh4q2a3dtd3rqvdtctjc6kcyuzv3l6qwan6xcnu" };
 const SUPPLY = 1_000_000_000;
 
 const readKey = (path) => Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(path, "utf8"))));
