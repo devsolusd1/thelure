@@ -16,7 +16,7 @@ A Token-2022 transfer hook. Token-2022 calls it in the middle of every transfer 
 
 The code in this folder is its second version. It carries three rules: a cap on what a wallet can hold, a limit on how much can be bought from the curve in one block, and a game, Last Buyer Wins. Each rule is optional, and all of them are fixed when the token is launched.
 
-**Devnet runs this version** since 2026-10-09, upgraded in place at the same address. [examples/demo-token.mjs](examples/demo-token.mjs) launched a token with all three rules on a curve that never graduates and traded it through Meteora: the first buy was counted under the guard, the next one took the lead and started a clock read from the leash, and the hook used about 1,060 compute units in each swap. [examples/host-agent.mjs](examples/host-agent.mjs) is the reference agent that hosts the game; on that token it fed the pot with a real leash spend. Some paragraphs below still describe the state before this deploy.
+**Devnet runs this version** since 2026-10-09, upgraded in place at the same address. [examples/demo-token.mjs](examples/demo-token.mjs) launched a token with all three rules on a curve that never graduates and traded it through Meteora: the first buy was counted under the guard, the next one took the lead and started a clock read from the leash, and the hook used about 1,060 compute units in each swap. [examples/host-agent.mjs](examples/host-agent.mjs) is the reference agent that hosts the game; on that token it fed the pot, turned the clock and paid the winner.
 
 ### Buys, sells and transfers
 
@@ -132,7 +132,16 @@ Custom codes, as `HookError` in [hook/src/state.rs](hook/src/state.rs):
 
 ### Proven inside Meteora swaps
 
-This is the first version, the one on devnet. [examples/meteora-probe.mjs](examples/meteora-probe.mjs) launches a token on a Meteora bonding curve (DBC) with the hook installed and trades through the curve. Run on devnet on 2026-10-05:
+This version, run on devnet on 2026-10-09 with [examples/demo-token.mjs](examples/demo-token.mjs) and then [examples/host-agent.mjs](examples/host-agent.mjs), on a curve that never graduates:
+
+- The first buy opened the guard and was counted against the block limit; the game did not start. The hook used 1,056 compute units of a 90,798-unit swap.
+- The next buy, after the guard, took the lead and started the clock, read from the leash inside the swap: 298 of 300 seconds were left when the script looked. 1,076 units of 67,643.
+- Both buys landed under the 2% wallet cap.
+- The token's agent then fed the pot with a leash `spend` of 0.005 SOL, turned the clock from 300 to 600 seconds with `set_param`, and when the round ran out called `settle`, which paid the 0.005 SOL to the last buyer. Each of its transactions carries a one-line memo saying why.
+
+Not tried on devnet with this version: a buy refused by the block limit, and a sell.
+
+The first version was proven the same way on 2026-10-05 with [examples/meteora-probe.mjs](examples/meteora-probe.mjs):
 
 - Meteora accepted the hook program as it is. Any executable program can be a hook; there is no allowlist.
 - A buy under the cap landed, a buy that would pass 1% of supply was refused by the hook itself, and a sell landed.
@@ -145,9 +154,7 @@ Two things that shape every later rule:
 - Meteora's SDK works out the hook's accounts with placeholder keys for the trader. A rule can only use accounts that follow from the mint alone, unless the trade is built by our own code.
 - Meteora removes the hook when a curve graduates. Rules run only while the token is on its curve.
 
-Not proven yet for the second version: that it reads the clock and stays cheap inside a Meteora swap, and that its game and block limit behave there as they do in the simulator.
-
-The two example scripts speak different versions until the next deploy. `meteora-probe.mjs` now sends the second version's `init`, which the devnet copy refuses: point it at a deployment of this code with `HOOK_PROGRAM`. [examples/curve-check.mjs](examples/curve-check.mjs) still sends the first version's `init` and runs against devnet as it is.
+`meteora-probe.mjs` and `demo-token.mjs` send this version's `init`. [examples/curve-check.mjs](examples/curve-check.mjs) builds the two curve configs and simulates them, which does not involve the hook; its sending mode still builds the first version's `init`, which the program on devnet now refuses, so that one line has to follow before it is run with `SEND=1` again.
 
 ### How it is tested
 
