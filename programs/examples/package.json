@@ -1,12 +1,16 @@
 {
-  "name": "lure-leash-examples",
+  "name": "lure-examples",
   "private": true,
   "type": "module",
-  "description": "Client example for the leash program: a full run on devnet.",
+  "description": "Client examples for the Lure programs: full runs on devnet.",
   "scripts": {
-    "smoke": "node devnet-smoke.mjs"
+    "smoke": "node devnet-smoke.mjs",
+    "probe": "node meteora-probe.mjs"
   },
   "dependencies": {
-    "@solana/web3.js": "^1.98.0"
+    "@meteora-ag/dynamic-bonding-curve-sdk": "^1.5.13",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.98.0",
+    "bn.js": "^5.2.1"
   }
 }

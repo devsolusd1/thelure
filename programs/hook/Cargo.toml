@@ -1,0 +1,30 @@
+[package]
+name = "lure-hook"
+version = "0.1.0"
+edition = "2021"
+description = "Transfer hook for Lure tokens: rules Solana checks on every transfer."
+license = "MIT"
+publish = false
+
+[lib]
+name = "lure_hook"
+crate-type = ["cdylib", "lib"]
+
+[features]
+default = ["probe"]
+# Logs one line per transfer (accounts seen, amount, balance, cap, count). For devnet probing.
+probe = []
+
+[dependencies]
+pinocchio = { version = "0.11", default-features = false, features = ["cpi"] }
+pinocchio-system = "0.6"
+
+# Deploy rent is paid per byte, so the release build optimises for size.
+[profile.release]
+opt-level = "s"
+lto = "fat"
+codegen-units = 1
+overflow-checks = true
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }

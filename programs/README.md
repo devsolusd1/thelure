@@ -1,14 +1,39 @@
 # Lure programs
 
-On-chain programs for Lure. So far there is one: the leash.
+On-chain programs for Lure: the leash, which limits a token's AI agent, and the hook, which checks every transfer of a token.
 
-**Status: on devnet only, not audited.** Do not put real money behind it.
+**Status: on devnet only, not audited.** Do not put real money behind them.
 
-| | |
-|---|---|
-| Devnet address | [`GrojbAndyBXQTo5GxgqXAmDDKjDWkPBPeGniBEQsa89p`](https://explorer.solana.com/address/GrojbAndyBXQTo5GxgqXAmDDKjDWkPBPeGniBEQsa89p?cluster=devnet) |
-| Upgrade authority | `7f2MiAuyJ1Aaiheo9ctLgJmzGDWoDceyHEEuVB2mhPAA` (still upgradeable) |
-| Mainnet | not deployed |
+| | Leash | Hook |
+|---|---|---|
+| Devnet address | [`GrojbAndyBXQTo5GxgqXAmDDKjDWkPBPeGniBEQsa89p`](https://explorer.solana.com/address/GrojbAndyBXQTo5GxgqXAmDDKjDWkPBPeGniBEQsa89p?cluster=devnet) | [`4akkPWLw1imyEhcqAJaHgPPrbDZr6VPaHPifVUV7K5tS`](https://explorer.solana.com/address/4akkPWLw1imyEhcqAJaHgPPrbDZr6VPaHPifVUV7K5tS?cluster=devnet) |
+| Upgrade authority | `7f2MiAuyJ1Aaiheo9ctLgJmzGDWoDceyHEEuVB2mhPAA` (still upgradeable) | same |
+| Mainnet | not deployed | not deployed |
+
+## Hook
+
+A Token-2022 transfer hook. Token-2022 calls it in the middle of every transfer of a Lure token, with the balances already moved; if the hook returns an error, the whole transaction fails and nothing moves.
+
+This first version carries one rule, a cap on what a wallet can hold, and counts the transfers it lets through. The cap is either fixed at launch or read from the token's leash, so the token's agent can tune it inside the range the leash allows.
+
+### Proven inside Meteora swaps
+
+[examples/meteora-probe.mjs](examples/meteora-probe.mjs) launches a token on a Meteora bonding curve (DBC) with the hook installed and trades through the curve. Run on devnet on 2026-10-05:
+
+- Meteora accepted the hook program as it is. Any executable program can be a hook; there is no allowlist.
+- A buy under the cap landed, a buy that would pass 1% of supply was refused by the hook itself, and a sell landed.
+- The hook is handed six accounts: source, mint, destination, the source's owner, its account list and its rules. The balances it reads are the ones after the transfer.
+- It can write to its own account inside the swap: the counter moved.
+- It used about 660 compute units; the whole swap about 85,000.
+
+Two things that shape every later rule:
+
+- Meteora's SDK works out the hook's accounts with placeholder keys for the trader. A rule can only use accounts that follow from the mint alone, unless the trade is built by our own code.
+- Meteora removes the hook when a curve graduates. Rules run only while the token is on its curve.
+
+### How it is tested
+
+`hook-tests` runs the compiled hook inside LiteSVM behind the real Token-2022 program: every transfer in those tests goes through Token-2022, which is what calls the hook. `bash test.sh` runs everything.
 
 ## Leash
 
@@ -33,7 +58,7 @@ The SOL in the leash account is the agent's budget. Anyone adds to it with a pla
 - It does not pick honest destinations. The creator chooses them at launch and they are public on-chain.
 - The daily caps use fixed windows. A window spent late and the next one spent early can land two days' worth close together.
 - It does not swap or burn. A buyback is a `spend` to a buyback destination that does the swap.
-- Parameters are numbers until a hook reads them. That hook does not exist yet.
+- Parameters are numbers until a hook reads them. The hook's wallet cap is the first rule that does.
 - It is only as fixed as the program. Until its upgrade authority is removed, whoever holds it can change every leash.
 
 ### Account

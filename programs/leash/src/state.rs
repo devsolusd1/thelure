@@ -101,6 +101,16 @@ const _: () = assert!(LEASH_LEN == 432);
 const _: () = assert!(core::mem::align_of::<Leash>() == 8);
 
 impl Leash {
+    /// Read-only view of account data as a leash, for programs that only look at it.
+    /// The caller checks that the leash program owns the account.
+    pub fn cast(bytes: &[u8]) -> Option<&Leash> {
+        if bytes.len() != LEASH_LEN || bytes.as_ptr() as usize % core::mem::align_of::<Leash>() != 0 {
+            return None;
+        }
+        // SAFETY: as in `cast_mut`, with a shared borrow.
+        Some(unsafe { &*(bytes.as_ptr() as *const Leash) })
+    }
+
     /// Views account data as a leash, checking length and alignment only.
     pub fn cast_mut(bytes: &mut [u8]) -> Option<&mut Leash> {
         if bytes.len() != LEASH_LEN || bytes.as_ptr() as usize % core::mem::align_of::<Leash>() != 0 {

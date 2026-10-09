@@ -1,15 +1,23 @@
 #!/bin/bash
-# Builds the leash program and runs every test. Run it from Linux or WSL.
+# Builds both programs and runs every test. Run it from Linux or WSL.
 set -euo pipefail
 cd "$(dirname "$0")"
 export PATH="$HOME/.cargo/bin:$HOME/.local/share/solana/install/active_release/bin:$PATH"
 
 # Cargo is slow on a Windows drive mounted in WSL, so build somewhere native.
 target="${LURE_TARGET:-$HOME/lure-target}"
-out="$target/leash/deploy"
+# Both simulator test crates share one target directory, so LiteSVM compiles once.
+sim="$target/leash-tests"
+export LEASH_SO="$target/leash/deploy/lure_leash.so"
+export HOOK_SO="$target/hook/deploy/lure_hook.so"
 
-(cd leash && CARGO_TARGET_DIR="$target/leash" cargo test --lib)
-(cd leash && CARGO_TARGET_DIR="$target/leash" cargo build-sbf --sbf-out-dir "$out")
-(cd leash-tests && CARGO_TARGET_DIR="$target/leash-tests" LEASH_SO="$out/lure_leash.so" cargo test -- --nocapture)
+for program in leash hook; do
+  (cd "$program" && CARGO_TARGET_DIR="$target/$program" cargo test --lib)
+  (cd "$program" && CARGO_TARGET_DIR="$target/$program" cargo build-sbf --sbf-out-dir "$target/$program/deploy")
+done
+(cd leash-tests && CARGO_TARGET_DIR="$sim" cargo test -- --nocapture)
+(cd hook-tests && CARGO_TARGET_DIR="$sim" cargo test -- --nocapture)
 
-echo "binary: $(stat -c %s "$out/lure_leash.so") bytes at $out/lure_leash.so"
+for so in "$LEASH_SO" "$HOOK_SO"; do
+  echo "binary: $(stat -c %s "$so") bytes at $so"
+done
