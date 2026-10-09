@@ -73,7 +73,7 @@
       ["Tokens", String(tokens.length)],
       ["Volume 24h", fmtUsd(vol)],
       ["In game pots now", fmtSol(pots), true],
-      ["$LURE bought back 24h", fmtUsd((vol * FEES.buyback) / 100)],
+      ["Fees paid 24h", fmtUsd((vol * FEES.total) / 100)],
     ].map(([k, v, accent]) => `<div class="stat${accent ? " is-accent" : ""}"><dt>${k}</dt><dd>${v}</dd></div>`).join("");
   }
 

@@ -2,8 +2,8 @@
 window.LURE = (() => {
   // Every trade on a Lure curve pays FEES.total percent, split like this (percent of trade volume).
   // Meteora's bonding curve keeps 20% of the trading fee (PROTOCOL_FEE_PERCENT), so 1% nets 0.8%:
-  // the creator gets half of it, the platform the other half (treasury and $LURE buyback).
-  const FEES = { total: 1, creator: 0.4, treasury: 0.2, buyback: 0.2, protocol: 0.2 };
+  // the creator gets half of it and the Lure treasury the other half.
+  const FEES = { total: 1, creator: 0.4, treasury: 0.4, protocol: 0.2 };
 
   const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
   const rand = (a, b) => a + Math.random() * (b - a);

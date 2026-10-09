@@ -366,7 +366,7 @@
     [false, "Agent sends 0.003 SOL at once", "over the cap per action"],
     [false, "Agent sends SOL to its own wallet", "not an allowed destination"],
     [false, "A stranger tries to spend", "not the agent"],
-    [true, "Agent sends 0.002 SOL to the buyback", "5Xk5bYwnYhgeLcMuRAqZxTyg2ouvY17ghMsLokJwrqYgWHzGB9uxM1p67ettXV9tFHjEHDw3bHKRqCYP25NcRJ5f"],
+    [true, "Agent sends 0.002 SOL to its second destination", "5Xk5bYwnYhgeLcMuRAqZxTyg2ouvY17ghMsLokJwrqYgWHzGB9uxM1p67ettXV9tFHjEHDw3bHKRqCYP25NcRJ5f"],
     [false, "Agent sends 0.001 SOL more", "over the daily cap"],
     [true, "Agent rewards a holder with 0.001 SOL", "3VxM6qg9PJ9URhuw8DdpUFQEPAD9PrKry4SfRcF8avPB4JxuDRN5WLX46JUNTMDHZMoCEE4ZG3wqEoCLRfpfx8Ag"],
     [true, "Agent moves a rule from 600 to 900", "5275TTm88wNqP6MXKbBY5GAAibvYZA3TZmbXNQcCBwSWx2mRtLP1Kzi8eYdy35vCrW8s2uDzG4rduCDpZvuE5BsP"],
