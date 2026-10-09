@@ -1,4 +1,5 @@
-// Creates the three Meteora configs Lure launches under, on one cluster. A config can never
+// Creates the two Meteora configs tokens launch under on Lure, on one cluster ($LURE itself has
+// no hook and its own script, launch-lure.mjs). A config can never
 // be edited, and it names for good who claims Lure's share of the fees: read what this
 // prints before sending.
 //
@@ -10,8 +11,6 @@
 //   KEYPAIR      pays the rent, about 0.006 SOL a config; without SEND=1 only PAYER's address is needed
 //   START_MCAP   market cap a token starts at, in SOL (default 30)
 //   GRAD_MCAP    market cap at which a graduating token moves to a Meteora pool, in SOL (default 420)
-//   LURE_FEE_BPS fee of $LURE's own config (default 300 = 3%)
-//   LURE_CURVE   infinite (default) or graduating
 //
 // The hook program has to be on the cluster first (programs/deploy.sh): Meteora checks it.
 // What it made is written to configs.<cluster>.json, addresses only.
@@ -33,8 +32,6 @@ const SEND = process.env.SEND === "1";
 const KEYPAIR = (process.env.KEYPAIR ?? "~/.config/solana/id.json").replace(/^~/, homedir());
 const START = Number(process.env.START_MCAP ?? 30);
 const GRAD = Number(process.env.GRAD_MCAP ?? 420);
-const LURE_FEE_BPS = Number(process.env.LURE_FEE_BPS ?? 300);
-const LURE_CURVE = process.env.LURE_CURVE ?? "infinite";
 const SUPPLY = 1_000_000_000;
 
 if (!process.env.TREASURY) throw new Error("Set TREASURY: the address that claims Lure's share of the fees. It cannot be changed later.");
@@ -90,11 +87,9 @@ const curve = ({ feeBps, creatorShare }) =>
   });
 
 const tokens = curve({ feeBps: 100, creatorShare: 50 });
-const lure = curve({ feeBps: LURE_FEE_BPS, creatorShare: 0 });
 const CONFIGS = {
   graduating: { what: "launched tokens that graduate, 1% fee", config: tokens },
   infinite: { what: "launched tokens on infinite bonding, 1% fee", config: neverGraduating(tokens) },
-  lure: { what: `$LURE, ${LURE_FEE_BPS / 100}% fee, ${LURE_CURVE === "infinite" ? "infinite bonding" : "graduates"}`, config: LURE_CURVE === "infinite" ? neverGraduating(lure) : lure },
 };
 
 const connection = new Connection(RPC_URL, "confirmed");

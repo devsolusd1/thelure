@@ -1,0 +1,13 @@
+{
+  "name": "LurePad",
+  "symbol": "LURE",
+  "description": "The token of LurePad, a Solana launchpad for tokens with hooks and AI agents on a leash.",
+  "image": "https://www.lurepad.fun/assets/lure-logo.png",
+  "external_url": "https://lurepad.fun",
+  "website": "https://lurepad.fun",
+  "twitter": "https://x.com/Lurepadfun",
+  "extensions": {
+    "website": "https://lurepad.fun",
+    "twitter": "https://x.com/Lurepadfun"
+  }
+}
