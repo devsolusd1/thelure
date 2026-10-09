@@ -222,7 +222,7 @@
       const s = Object.fromEntries(Object.entries(state.hooks[h.id]).map(([k, v]) => [k, v === "" || Number.isNaN(v) ? "?" : v]));
       for (const line of h.dsl(s, state).split("\n")) lines.push(`  ${line}`);
     }
-    lines.push(state.curve === "permanent" ? "  # permanent curve: these rules never switch off" : `  # graduates at ${fmtUsd(gradMc)}: rules switch off there`);
+    lines.push(state.curve === "permanent" ? "  # infinite bonding: these rules never switch off" : `  # graduates at ${fmtUsd(gradMc)}: rules switch off there`);
     lines.push("}");
     return lines.join("\n");
   }
@@ -289,7 +289,7 @@
       `Upload the image and metadata for <b>$${tick}</b>`,
       `Create the <b>$${tick}</b> mint (Token-2022) pointed at the Lure hook`,
       state.curve === "permanent"
-        ? `Open a <b>permanent</b> Meteora bonding curve starting at <b>${fmtUsd(state.startMc)}</b>`
+        ? `Open a Meteora bonding curve that <b>never graduates</b>, starting at <b>${fmtUsd(state.startMc)}</b>`
         : `Open a Meteora bonding curve from <b>${fmtUsd(state.startMc)}</b>, graduating at <b>${fmtUsd(state.gradMc)}</b>`,
       sel.length
         ? `Write ${sel.length} rule${sel.length > 1 ? "s" : ""} to the hook: <b>${sel.map((h) => h.name).join(", ")}</b>`

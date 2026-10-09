@@ -126,9 +126,9 @@ window.LURE = (() => {
     },
     {
       id: "bundle", cat: "guards", name: "Anti-bundle",
-      desc: "Only a few trades per block. A bundler can't buy up the launch in one shot.",
-      settings: [{ key: "n", label: "Max trades per block", unit: "trades", min: 1, max: 20, step: 1, def: 3 }],
-      dsl: (s) => `always -> max_trades_per_block ${s.n}`,
+      desc: "Only so much of the supply can be bought in one block. A bundler can't take the launch in one shot.",
+      settings: [{ key: "pct", label: "Max bought per block", unit: "% supply", min: 0.1, max: 10, step: 0.1, def: 2 }],
+      dsl: (s) => `always -> max_buy_per_block ${s.pct}%`,
     },
     {
       id: "price", cat: "oracle", name: "Price trigger", orig: true,
@@ -200,7 +200,7 @@ window.LURE = (() => {
   }
 
   function curveBlock(t) {
-    if (t.curve === "permanent") return `<div class="tcurve is-perm"><span class="tcurve-k">∞ Permanent curve</span><span class="tcurve-note">hooks run forever</span></div>`;
+    if (t.curve === "permanent") return `<div class="tcurve is-perm"><span class="tcurve-k">∞ Infinite bonding</span><span class="tcurve-note">hooks run forever</span></div>`;
     if (t.curve === "graduated") return `<div class="tcurve is-grad"><span class="tcurve-k">Graduated</span><span class="tcurve-note">on Meteora · hooks off</span></div>`;
     const p = progress(t);
     return `<div class="tcurve">

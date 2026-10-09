@@ -1,279 +1,365 @@
+/* The landing: the logo hung from the top of the window as a rig, and five screens it answers to. */
 (() => {
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const ORANGE = "#fd4b00";
-  const rand = (a, b) => a + Math.random() * (b - a);
-  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-  const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-  const wallet = () => {
-    const s = (n) => Array.from({ length: n }, () => pick(B58)).join("");
-    return `${s(4)}…${s(4)}`;
+  const { HOOKS, CATEGORIES, defaults, highlight, esc } = window.LURE;
+  const root = document.documentElement;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const svg = (tag, attrs = {}) => {
+    const el = document.createElementNS(SVG_NS, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
   };
-  const MARK_SVG = '<svg class="tk-sep" viewBox="730 420 1024 1544" aria-hidden="true"><use href="#lure-path"/></svg>';
+  const EXPLORER = "https://explorer.solana.com";
+  const txLink = (sig) => `<a href="${EXPLORER}/tx/${sig}?cluster=devnet" target="_blank" rel="noopener">tx</a>`;
+  root.classList.add("js");
 
-  /* ---------------- Hero canvas: fish drawn to the bait ---------------- */
-  const canvas = document.getElementById("deep");
-  const ctx = canvas.getContext("2d");
-  const heroLogo = document.getElementById("hero-logo");
-  let W = 0, H = 0;
-  let bubbles = [], fish = [];
+  /* ---------------- The rig ---------------- */
+  // Logo units (see the sprite). The line meets the knot at PIVOT, the barb ends at POINT, the
+  // bait is tied on at TIE. From the knot to the bottom of the hook is TACKLE units.
+  const PIVOT = [1292, 455], POINT = [916, 1276], TIE = [1345, 942], HOOK_LEFT = 742, FISH_RIGHT = 1742, TACKLE = 1500;
+  // Where the knot hangs on each screen, as a share of the window's height: [wide, phone].
+  const POSE = { top: [0.43, 0.78], hook: [0.43, 0.78], box: [0.38, 0.78], agent: [0.25, 0.6], proof: [0.44, 0.8] };
 
-  // Where the little fish on the hook sits, inside the logo's viewBox (730 0 1024 1964).
-  function baitPoint() {
-    const c = canvas.getBoundingClientRect();
-    const l = heroLogo.getBoundingClientRect();
-    return { x: l.left - c.left + l.width * 0.75, y: l.top - c.top + l.height * 0.64 };
+  const lineEl = $("rig-line"), tackleEl = $("rig-tackle"), baitEl = $("rig-bait"), extras = $("rig-extras");
+  let W = 0, H = 0, phone = false, lineX = 0, scale = 1, freeTop = 0, colLeft = 24;
+  let depth = "top", agentStep = 0;
+  const knot = { x: 0, y: 0, rot: 0 };
+
+  // Damped springs: x chases `to`.
+  const spring = (k, c) => ({ x: 0, v: 0, to: 0, k, c });
+  const drop = spring(90, 11); // how low the knot hangs, px
+  const swing = spring(26, 3); // the line below the last weight, radians from straight down
+  const bow = spring(420, 9); // how far the line is pulled sideways, px
+  const wag = spring(160, 7); // the bait about its tie, degrees
+  let bowAt = 0.5; // where along the free line the pull sits, 0 to 1
+  const advance = (s, dt) => {
+    s.v += ((s.to - s.x) * s.k - s.v * s.c) * dt;
+    s.x += s.v * dt;
+  };
+
+  function measure() {
+    W = root.clientWidth;
+    H = window.innerHeight;
+    phone = W < 720;
+    scale = (phone ? Math.max(124, H * 0.16) : Math.min(H * 0.5, W * 0.46)) / TACKLE;
+    // On a phone the rig keeps to the right edge, and the words never run under it.
+    lineX = phone ? Math.round(W - (FISH_RIGHT - PIVOT[0]) * scale - 9) : Math.round(W * 0.7);
+    const d0 = phone ? 84 : 88, gap = 26;
+    freeTop = d0 + gap * 4 + 16; // the line runs straight down to the last weight
+    colLeft = phone ? 16 : Math.max(24, (W - 1160) / 2 + 24);
+    const col = Math.min(620, lineX - (PIVOT[0] - HOOK_LEFT) * scale - (phone ? 10 : 48) - colLeft);
+    const set = (name, px) => root.style.setProperty(name, `${Math.round(px)}px`);
+    set("--line-x", lineX); set("--col", col); set("--col-left", colLeft); set("--d0", d0); set("--dgap", gap);
+    lineEl.setAttribute("stroke-width", Math.max(3, 32 * scale).toFixed(1));
   }
 
-  function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = canvas.clientWidth;
-    H = canvas.clientHeight;
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    bubbles = Array.from({ length: Math.round((W * H) / 22000) }, () => ({
-      x: rand(0, W), y: rand(0, H), r: rand(1, 3.4), v: rand(0.15, 0.5), a: rand(0.12, 0.35), p: rand(0, 6),
-    }));
-    fish = Array.from({ length: W < 600 ? 5 : 9 }, () => newFish(true));
+  function pose(snap) {
+    let share = POSE[depth][phone ? 1 : 0];
+    if (depth === "agent") share += agentStep * (phone ? 0.03 : 0.045);
+    drop.to = H * share;
+    if (snap || reduce) { drop.x = drop.to; drop.v = 0; }
   }
 
-  function newFish(anywhere) {
-    const fromLeft = Math.random() < 0.5;
-    return {
-      x: anywhere ? rand(0, W) : (fromLeft ? -40 : W + 40),
-      y: rand(H * 0.1, H * 0.85),
-      vx: (fromLeft ? 1 : -1) * rand(0.3, 0.8),
-      vy: rand(-0.15, 0.15),
-      size: rand(7, 14),
-      state: "swim",
-      cooldown: 0,
-    };
+  // A point of the logo, in window pixels, wherever the tackle has swung to.
+  function at(u) {
+    const dx = (u[0] - PIVOT[0]) * scale, dy = (u[1] - PIVOT[1]) * scale;
+    const c = Math.cos(knot.rot), s = Math.sin(knot.rot);
+    return [knot.x + dx * c - dy * s, knot.y + dx * s + dy * c];
   }
 
-  function drawFish(f, near) {
-    const s = f.size;
-    ctx.save();
-    ctx.translate(f.x, f.y);
-    ctx.rotate(Math.atan2(f.vy, f.vx));
-    ctx.globalAlpha = 0.22 + near * 0.6;
-    ctx.fillStyle = ORANGE;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, s, s * 0.45, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(-s * 0.8, 0);
-    ctx.lineTo(-s * 1.7, -s * 0.62);
-    ctx.lineTo(-s * 1.35, 0);
-    ctx.lineTo(-s * 1.7, s * 0.62);
-    ctx.closePath();
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = "#000";
-    ctx.beginPath();
-    ctx.arc(s * 0.5, -s * 0.08, s * 0.13, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+  const followers = new Set(); // things that ride the rig, redrawn every frame
+  const tweens = new Set();
+  function tween(ms, onStep, onEnd) {
+    if (reduce) { onStep(1); if (onEnd) onEnd(); return; }
+    tweens.add({ t0: performance.now(), ms, onStep, onEnd });
   }
 
+  function draw(t) {
+    const sway = reduce ? 0 : Math.sin(t / 1900) * 0.02; // it is never quite still
+    const a = swing.x + sway;
+    const len = Math.max(6, drop.x - freeTop);
+    knot.x = lineX + Math.sin(a) * len;
+    knot.y = freeTop + Math.cos(a) * len;
+    knot.rot = -a * 1.3;
+    const cx = (lineX + knot.x) / 2 + bow.x * 2, cy = freeTop + len * bowAt;
+    lineEl.setAttribute("d", `M${lineX} -20V${freeTop}Q${cx.toFixed(1)} ${cy.toFixed(1)} ${knot.x.toFixed(1)} ${knot.y.toFixed(1)}`);
+    tackleEl.setAttribute(
+      "transform",
+      `translate(${knot.x.toFixed(1)} ${knot.y.toFixed(1)}) rotate(${((knot.rot * 180) / Math.PI).toFixed(2)}) scale(${scale.toFixed(4)}) translate(${-PIVOT[0]} ${-PIVOT[1]})`,
+    );
+    const idle = reduce ? 0 : Math.sin(t / 760) * 0.9;
+    baitEl.setAttribute("transform", `rotate(${(wag.x + idle).toFixed(2)} ${TIE[0]} ${TIE[1]})`);
+    for (const f of followers) f(t);
+  }
+
+  let last = 0;
   function frame(t) {
-    ctx.clearRect(0, 0, W, H);
-
-    ctx.strokeStyle = ORANGE;
-    ctx.lineWidth = 1.2;
-    for (const b of bubbles) {
-      b.y -= b.v;
-      b.x += Math.sin(t * 0.001 + b.p) * 0.15;
-      if (b.y < -6) { b.y = H + 6; b.x = rand(0, W); }
-      ctx.globalAlpha = b.a;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-      ctx.stroke();
+    // Small fixed steps, so the springs stay stable when the browser hands out frames slowly.
+    let left = clamp((t - last) / 1000 || 0.016, 0, 0.3);
+    last = t;
+    for (; left > 0; left -= 1 / 120) {
+      const dt = Math.min(left, 1 / 120);
+      advance(drop, dt); advance(swing, dt); advance(bow, dt); advance(wag, dt);
     }
-    ctx.globalAlpha = 1;
-
-    const bait = baitPoint();
-    for (let i = 0; i < fish.length; i++) {
-      const f = fish[i];
-      const dx = bait.x - f.x, dy = bait.y - f.y;
-      const d = Math.hypot(dx, dy) || 1;
-      if (f.cooldown > 0) f.cooldown--;
-      if (f.state === "swim" && d < 300 && f.cooldown === 0) f.state = "approach";
-      if (f.state === "approach") {
-        f.vx += (dx / d) * 0.04;
-        f.vy += (dy / d) * 0.04;
-        const sp = Math.hypot(f.vx, f.vy);
-        if (sp > 1.4) { f.vx *= 1.4 / sp; f.vy *= 1.4 / sp; }
-        if (d < 34) {
-          f.state = "dart";
-          const a = rand(0, Math.PI * 2);
-          f.vx = Math.cos(a) * 3.2;
-          f.vy = Math.sin(a) * 3.2;
-          f.cooldown = 260;
-        }
-      } else if (f.state === "dart") {
-        f.vx *= 0.985; f.vy *= 0.985;
-        if (Math.hypot(f.vx, f.vy) < 0.7) f.state = "swim";
-      }
-      f.x += f.vx;
-      f.y += f.vy;
-      if (f.x < -60 || f.x > W + 60 || f.y < -60 || f.y > H + 60) fish[i] = newFish(false);
-      drawFish(f, Math.max(0, 1 - d / 280));
+    for (const tw of tweens) {
+      const p = clamp((t - tw.t0) / tw.ms, 0, 1);
+      tw.onStep(p);
+      if (p === 1) { tweens.delete(tw); if (tw.onEnd) tw.onEnd(); }
     }
+    draw(t);
+    requestAnimationFrame(frame);
   }
 
-  // One loop at a time; it stops while the hero is off screen.
-  let visible = true, looping = false;
-  function loop(t) {
-    frame(t);
-    if (visible) requestAnimationFrame(loop);
-    else looping = false;
+  /* ---------------- What moves the line: the pointer, a touch, the scroll ---------------- */
+  let px = -999;
+  window.addEventListener("pointermove", (e) => {
+    if (e.pointerType === "touch" || reduce) return;
+    const vx = e.clientX - px;
+    px = e.clientX;
+    const dx = e.clientX - lineX, y = e.clientY;
+    if (y > freeTop && y < knot.y && Math.abs(dx) < 64) {
+      // The line gives way to the pointer; cross it and it snaps to the other side.
+      bow.to = -Math.sign(dx || 1) * (64 - Math.abs(dx)) * 0.5;
+      bowAt = clamp((y - freeTop) / (knot.y - freeTop), 0.2, 0.8);
+    } else {
+      bow.to = 0;
+    }
+    // A fast pass by the tackle sets it swinging.
+    const [hx, hy] = at([1240, 1300]);
+    if (Math.abs(e.clientX - hx) < 620 * scale && Math.abs(y - hy) < 720 * scale) swing.v += clamp(vx, -40, 40) * 0.0012;
+  });
+  document.addEventListener("pointerleave", () => { bow.to = 0; });
+  window.addEventListener("pointerdown", (e) => {
+    if (reduce || Math.abs(e.clientX - lineX) > 36 || e.clientY < freeTop || e.clientY > knot.y) return;
+    bowAt = clamp((e.clientY - freeTop) / (knot.y - freeTop), 0.2, 0.8);
+    bow.v += (e.clientX < lineX ? 1 : -1) * 620; // plucked
+  });
+
+  const screens = [...document.querySelectorAll(".screen")];
+  const weights = [...document.querySelectorAll("#depths a")];
+  const ptags = document.querySelector(".ptags");
+
+  function markWeights() {
+    const i = weights.findIndex((w) => w.dataset.depth === depth);
+    weights.forEach((w, n) => {
+      w.classList.toggle("is-past", n < i);
+      if (n === i) w.setAttribute("aria-current", "true");
+      else w.removeAttribute("aria-current");
+    });
   }
-  function start() {
-    if (looping || reduceMotion) return;
-    looping = true;
-    requestAnimationFrame(loop);
+
+  function setDepth(next) {
+    depth = next;
+    markWeights();
+    clearExtras();
+    pose();
+    if (reduce) return;
+    bow.v += 520; // every change of screen is felt on the line
+    ptags.classList.remove("is-flap");
+    void ptags.offsetWidth;
+    ptags.classList.add("is-flap");
   }
 
-  resize();
-  window.addEventListener("resize", () => { resize(); if (reduceMotion) frame(0); });
-  if (reduceMotion) frame(0);
-  else start();
+  let lastScroll = window.scrollY;
+  function onScroll() {
+    const dy = window.scrollY - lastScroll;
+    lastScroll = window.scrollY;
+    if (!reduce) {
+      bow.v += clamp(dy, -60, 60) * 2.2;
+      swing.v += clamp(dy, -60, 60) * 0.0009;
+    }
+    let cur = screens[0];
+    for (const s of screens) if (s.getBoundingClientRect().top < H * 0.5) cur = s;
+    if (cur.dataset.depth !== depth) setDepth(cur.dataset.depth);
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", () => { measure(); pose(true); });
 
-  if ("IntersectionObserver" in window) {
-    new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
-      if (visible) start();
-    }).observe(canvas);
+  /* ---------------- The mark a refusal leaves ---------------- */
+  const stamp = $("stamp");
+  let stampTimer = 0, flashed = false;
+  function refuse(text, x, y) {
+    stamp.textContent = text;
+    stamp.style.left = `${clamp(x, 110, W - 110)}px`;
+    stamp.style.top = `${clamp(y, 110, H - 70)}px`;
+    stamp.className = "stamp";
+    void stamp.offsetWidth;
+    stamp.classList.add("is-on");
+    clearTimeout(stampTimer);
+    stampTimer = setTimeout(() => stamp.classList.replace("is-on", "is-off"), 1700);
+    if (flashed || reduce) return;
+    flashed = true; // once: for a moment the page is the logo inverted
+    root.classList.add("is-refused");
+    setTimeout(() => root.classList.remove("is-refused"), 380);
   }
 
-  /* ---------------- Ticker band ---------------- */
-  const events = [
-    () => ["▲ Buy", `${wallet()} +${rand(0.05, 0.9).toFixed(2)}%`, "clock reset"],
-    () => ["★ Win", `${wallet()} claims ${rand(2, 18).toFixed(2)} SOL`, "last buyer wins"],
-    () => ["✕ Refused", `${wallet()}`, "Lure Pass: hold $LURE to buy early"],
-    () => ["◆ Streak", `${wallet()} held ${Math.floor(rand(3, 21))} days`, "diamond hands"],
-    () => ["✕ Refused", `${wallet()} paid ${rand(0.02, 0.4).toFixed(3)} SOL tip`, "sniper-fee cap"],
-    () => ["● King", `${wallet()} biggest buy of the block`, `+${rand(0.1, 1.5).toFixed(2)} SOL`],
-    () => ["▼ Sell", `${wallet()} −${rand(0.05, 0.3).toFixed(2)}%`, "streak reset"],
-    () => ["■ Faction", `Team ${pick(["Shark", "Squid"])} leads by ${rand(1, 9).toFixed(1)}%`, "round ends in 14m"],
-  ];
-  const ticker = document.getElementById("ticker");
-  const items = [];
-  for (let i = 0; i < 10; i++) {
-    const [kind, detail, sub] = (i < events.length ? events[i] : pick(events))();
-    items.push(`<span class="tk-item"><b>${kind}</b> ${detail} <span class="tk-sub">· ${sub}</span></span>${MARK_SVG}`);
+  let hooked = null;
+  function clearExtras() {
+    followers.clear();
+    tweens.clear();
+    extras.replaceChildren();
+    hooked = null;
+    stamp.className = "stamp";
   }
-  ticker.innerHTML = items.join("") + items.join(""); // twice, so the loop is seamless
-  ticker.style.animationDuration = `${Math.round(ticker.scrollWidth / 2 / 70)}s`;
 
-  /* ---------------- Hook catalog (shared with the app pages, see app.js) ---------------- */
-  const { HOOKS: hooks, CATEGORIES: catLabel, highlight } = window.LURE;
-  const grid = document.getElementById("hook-grid");
+  /* ---------------- Screen 2: trades are fish meeting the hook ---------------- */
+  // A paper fish, nose at the origin, facing right.
+  const FISH = "M0 0C-10-20-45-26-66-6L-100-26-90 0-100 26-66 6C-45 26-10 20 0 0ZM-26.5-7a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0-9 0Z";
+  const place = (el, x, y, deg, k) => el.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${deg.toFixed(1)}) scale(${k.toFixed(3)})`);
+  const bez = (a, c, b, p) => [(1 - p) ** 2 * a[0] + 2 * (1 - p) * p * c[0] + p * p * b[0], (1 - p) ** 2 * a[1] + 2 * (1 - p) * p * c[1] + p * p * b[1]];
+  const ease = (p) => (p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2);
 
-  function renderHooks(filter) {
-    grid.innerHTML = "";
-    hooks
-      .filter((h) => filter === "all" || h.cat === filter)
-      .forEach((h, i) => {
-        const el = document.createElement("article");
-        el.className = "hook";
-        el.style.animationDelay = `${i * 40}ms`;
-        el.innerHTML = `
-          <div class="hook-top">
-            <span class="hook-cat cat-${h.cat}">${catLabel[h.cat]}</span>
-            ${h.orig ? '<span class="hook-orig">Lure original</span>' : ""}
-          </div>
-          <h3>${h.name}</h3>
-          <p>${h.desc}</p>`;
-        grid.appendChild(el);
+  function newFish(size) {
+    const el = svg("path", { d: FISH, class: "paper", "fill-rule": "evenodd" });
+    extras.appendChild(el);
+    return { el, k: size * clamp((TACKLE * scale) / 420, 0.55, 1.3) };
+  }
+
+  // Swims in from the bottom left to the point of the hook, then `arrive` decides what happens.
+  function swimIn(size, ms, arrive) {
+    const fish = newFish(size);
+    const from = [phone ? -110 : colLeft + 40, H + 70];
+    let prev = from;
+    tween(ms, (p) => {
+      const to = at(POINT);
+      const [x, y] = bez(from, [from[0] * 0.35 + to[0] * 0.65, to[1] + 26], to, ease(p));
+      const heading = (Math.atan2(y - prev[1], x - prev[0]) * 180) / Math.PI;
+      place(fish.el, x, y, (p < 1 ? heading : 0) + Math.sin(p * 20) * 7, fish.k);
+      prev = [x, y];
+    }, () => arrive(fish));
+  }
+
+  // Leaves the way it came, facing left.
+  function swimOut(fish, ms) {
+    const from = at(POINT), to = [phone ? -140 : colLeft - 60, H + 90];
+    tween(ms, (p) => {
+      const [x, y] = bez(from, [from[0] - 120, to[1] - 60], to, ease(p));
+      fish.el.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(-32 * p + Math.sin(p * 20) * 7).toFixed(1)}) scale(${-fish.k} ${fish.k})`);
+    }, () => fish.el.remove());
+  }
+
+  function hang(fish) {
+    hooked = fish;
+    fish.follow = (t) => {
+      const [x, y] = at(POINT);
+      place(fish.el, x, y, -90 + (knot.rot * 180) / Math.PI + Math.sin(t / 420) * 4, fish.k);
+    };
+    followers.add(fish.follow);
+  }
+  function unhang() {
+    const fish = hooked;
+    hooked = null;
+    if (fish) followers.delete(fish.follow);
+    return fish;
+  }
+
+  const BUY = "2gyG9dK1napzTPVDZhHp9DqwEeBLzxHu8wRsh5zrvbwyuxgaTEWkS3rk9wKheKnwtyoiMkKxRNUWs7NdaTiXxiEw";
+  const SELL = "5fcuWnn3Te2fuUb2Mx3tQBhqfdFNUydeyWu5CCukvQJzZZvGT9awsWXLLSK3GSMuYcZUhvJwaUnHf9nTvjj4f8Cu";
+  const hookOut = $("hook-out");
+  const PLAYS = {
+    under(pill) {
+      const old = unhang();
+      if (old) swimOut(old, 700);
+      swimIn(0.5, 1150, (fish) => {
+        hang(fish);
+        drop.v += 260; swing.v -= 0.5; wag.v += 60;
+        pill.classList.add("is-ok");
+        hookOut.innerHTML = `<span class="ok">Landed.</span> A buy of <b>0.003 SOL</b> took <b>0.296%</b> of the supply, under the cap. ${txLink(BUY)}`;
       });
-  }
-  renderHooks("all");
-
-  document.querySelectorAll(".chip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      document.querySelectorAll(".chip").forEach((c) => {
-        c.classList.toggle("is-active", c === chip);
-        c.setAttribute("aria-selected", String(c === chip));
+    },
+    over(pill) {
+      swimIn(1.15, 950, (fish) => {
+        const [x, y] = at(POINT);
+        swing.v += 0.95; wag.v -= 80;
+        tween(650, (p) => {
+          place(fish.el, x - 230 * ease(p), y + 40 * p - 90 * Math.sin(p * Math.PI), -160 * p, fish.k);
+          fish.el.style.opacity = String(1 - p * p);
+        }, () => fish.el.remove());
+        refuse("0x1770", x - 30, y - 100);
+        pill.classList.add("is-no");
+        hookOut.innerHTML = `<span class="no">Refused by the hook, inside the swap.</span> A buy of <b>0.02 SOL</b> would have passed 1%. Error <b>0x1770</b>. Nothing moved.`;
       });
-      renderHooks(chip.dataset.filter);
+    },
+    sell(pill) {
+      const fish = unhang() || newFish(0.5);
+      swimOut(fish, 1000);
+      drop.v -= 160; swing.v += 0.3;
+      pill.classList.add("is-ok");
+      hookOut.innerHTML = `<span class="ok">Landed.</span> Half the bag went back to the curve. The hook never blocks a sell. ${txLink(SELL)}`;
+    },
+  };
+  document.querySelectorAll("[data-play]").forEach((pill) => {
+    pill.addEventListener("click", () => {
+      if (depth !== "hook") setDepth("hook");
+      PLAYS[pill.dataset.play](pill);
     });
   });
 
-  /* ---------------- Last Buyer Wins demo ---------------- */
-  const ROUND_SECONDS = 30;
-  const CIRC = 2 * Math.PI * 52;
-  const $ = (id) => document.getElementById(id);
-  const potEl = $("g-pot"), clockEl = $("g-clock"), ringEl = $("g-ring");
-  const leaderEl = $("g-leader"), roundEl = $("g-round"), logEl = $("g-log"), buyBtn = $("g-buy");
+  /* ---------------- Screen 3: the tackle box ---------------- */
+  const STATUS = { maxw: "Proven on devnet" };
+  const KINDS = { games: "Games", access: "Access", guards: "Guards", oracle: "Oracles" };
+  const boxList = $("box-list"), boxCard = $("box-card");
+  boxList.innerHTML = Object.entries(CATEGORIES)
+    .map(([cat]) => `
+      <div class="box-row">
+        <span class="box-k">${KINDS[cat]}</span>
+        <div class="pills">${HOOKS.filter((h) => h.cat === cat)
+          .map((h) => `<button type="button" class="pill pill-s${STATUS[h.id] ? " is-live" : ""}" data-hook="${h.id}" aria-pressed="false">${esc(h.name)}</button>`)
+          .join("")}</div>
+      </div>`)
+    .join("");
 
-  let round = 1, pot = 3.2, deadline = 0, leader = wallet(), nextBot = 0, botsQuietAt = 0;
-
-  function log(html, cls) {
-    const li = document.createElement("li");
-    if (cls) li.className = cls;
-    li.innerHTML = html;
-    logEl.prepend(li);
-    while (logEl.children.length > 4) logEl.lastElementChild.remove();
+  // The hook you pick is tied on as a paper tag.
+  function tieTag(text) {
+    clearExtras();
+    const g = svg("g");
+    const label = svg("text", { class: "rig-tagtext", "text-anchor": "middle", y: 51 });
+    label.textContent = text;
+    g.append(svg("path", { class: "rig-tagline", d: "M0 0V30" }), svg("path", { class: "paper" }), label);
+    extras.appendChild(g);
+    const w = label.getComputedTextLength() / 2 + 16;
+    g.children[1].setAttribute("d", `M${-w + 9} 30H${w - 9}L${w} 39V62H${-w}V39Z`);
+    followers.add((t) => {
+      const [x, y] = at(POINT);
+      const lean = clamp(((knot.rot * 180) / Math.PI) * 2.2 + Math.sin(t / 900) * 2, -24, 24);
+      g.setAttribute("transform", `translate(${clamp(x, w + 6, W - w - 6).toFixed(1)} ${y.toFixed(1)}) rotate(${lean.toFixed(1)})`);
+    });
+    drop.v += 150; wag.v += 45;
   }
 
-  function setLeader(name, isYou) {
-    leader = name;
-    leaderEl.textContent = name;
-    leaderEl.classList.toggle("is-you", !!isYou);
-  }
-
-  function buy(name, amount, isYou) {
-    pot += amount * 0.1;
-    deadline = performance.now() + ROUND_SECONDS * 1000;
-    setLeader(name, isYou);
-    potEl.textContent = pot.toFixed(2);
-    log(`<b>${name}</b> bought ${amount.toFixed(2)} SOL · clock reset`);
-  }
-
-  function startRound() {
-    const now = performance.now();
-    deadline = now + ROUND_SECONDS * 1000;
-    nextBot = now + rand(2000, 7000);
-    botsQuietAt = now + rand(20000, 60000);
-    roundEl.textContent = round;
-  }
-
-  function tick() {
-    const now = performance.now();
-    const left = Math.max(0, (deadline - now) / 1000);
-    clockEl.textContent = Math.ceil(left);
-    ringEl.style.strokeDashoffset = String(CIRC * (1 - left / ROUND_SECONDS));
-    ringEl.classList.toggle("is-low", left < 8);
-
-    if (left <= 0) {
-      log(`<b>${leader}</b> won round ${round} · ${pot.toFixed(2)} SOL`, "win");
-      round += 1;
-      pot = 1.0;
-      potEl.textContent = pot.toFixed(2);
-      setLeader("—", false);
-      startRound();
-      return;
-    }
-
-    if (now >= nextBot && now < botsQuietAt) {
-      buy(wallet(), rand(0.1, 3), false);
-      nextBot = now + rand(2500, 11000);
-    }
-  }
-
-  buyBtn.addEventListener("click", () => {
-    buy("You", 0.1, true);
-    botsQuietAt = Math.max(botsQuietAt, performance.now() + rand(4000, 20000));
+  boxList.addEventListener("click", (e) => {
+    const pill = e.target.closest("[data-hook]");
+    if (!pill) return;
+    const h = HOOKS.find((x) => x.id === pill.dataset.hook);
+    boxList.querySelectorAll("[data-hook]").forEach((p) => p.setAttribute("aria-pressed", String(p === pill)));
+    boxCard.hidden = false;
+    boxCard.innerHTML = `
+      <div class="card-top">
+        <h3>${esc(h.name)}</h3>
+        <span class="tag${STATUS[h.id] ? "" : " tag-muted"}">${STATUS[h.id] || "In development"}</span>
+      </div>
+      <p>${esc(h.desc)}</p>
+      <pre><code>${highlight(h.dsl(defaults(h), { potShare: 50 }))}</code></pre>`;
+    if (depth !== "box") setDepth("box");
+    if (phone) { drop.v += 150; wag.v += 45; } // no room for the tag: the rig just dips
+    else tieTag(h.name);
   });
 
-  potEl.textContent = pot.toFixed(2);
-  setLeader(leader, false);
-  startRound();
-  setInterval(tick, 250);
+  const CURVES = {
+    grad: "<b>Graduates.</b> At the market cap you set, the token moves to a Meteora pool and its hooks switch off.",
+    inf: "<b>Infinite bonding.</b> The curve never ends, so the hooks and games run for the life of the token.",
+  };
+  document.querySelectorAll("[data-curve]").forEach((pill) => {
+    pill.addEventListener("click", () => {
+      document.querySelectorAll("[data-curve]").forEach((p) => p.setAttribute("aria-pressed", String(p === pill)));
+      $("curve-out").innerHTML = CURVES[pill.dataset.curve];
+    });
+  });
 
-  /* ---------------- Agents: a leash walked through its life on devnet ---------------- */
-  // Recorded from programs/examples/devnet-smoke.mjs. Refused actions never became transactions.
+  /* ---------------- Screen 4: an agent on a leash ---------------- */
+  // Recorded from programs/examples/devnet-smoke.mjs. Refused tries never became transactions.
   const RUN = [
     [true, "Creator creates the leash", "3a8T7eGnqT8VmcygNGsFqEargzREi4nmP7EhZvwrX47vSq2cKC4t7gp3Dcawm7tMnFg1xTRcZy4VTBVaMXFFFk8P"],
     [true, "Agent sends 0.002 SOL to the pot", "2msaNAWNbDapEfCmUh3axonrMynciqdhv7Y8ndWJicg84oiD6W2hVUffpQu2E4qEYdrYerwCZUZNtGnR7SvpAeEe"],
@@ -289,56 +375,58 @@
     [false, "Revoked agent tries to spend", "no longer the agent"],
     [true, "Anyone sweeps what's left to the pot", "2ofvRFC2XdEFJhrfpNRsDQJL1XFbT6CbPxMR4zDwUJsX4MLWebWE5QEFXr8rzE1WpyUhkmfD3jpLQYJ2cLuPTS6z"],
   ];
-  document.getElementById("runlog").innerHTML = RUN.map(([ok, text, detail]) => `
+  // The six worth pressing: a label for the pill, which line of the run it replays, and why.
+  const TRIES = [
+    ["Send 0.002 SOL to the pot", 1, "Inside the cap per action."],
+    ["Send 0.003 SOL at once", 2, "Over the cap per action."],
+    ["Pay its own wallet", 3, "Not a destination picked at launch."],
+    ["Move a rule from 600 to 900", 8, "One step, inside its range."],
+    ["Jump it to 1500", 9, "More than one step at a time."],
+    ["Revoke the agent", 10, "The creator can switch the agent off, and never loosen the leash."],
+  ];
+  const agentPills = $("agent-pills"), agentOut = $("agent-out");
+  agentPills.innerHTML = TRIES.map(([label], i) => `<button type="button" class="pill pill-s" data-try="${i}">${label}</button>`).join("");
+  agentPills.addEventListener("click", (e) => {
+    const pill = e.target.closest("[data-try]");
+    if (!pill) return;
+    const [, line, note] = TRIES[pill.dataset.try];
+    const [ok, , detail] = RUN[line];
+    if (depth !== "agent") setDepth("agent");
+    pill.classList.add(ok ? "is-ok" : "is-no");
+    if (line === 10) {
+      agentStep = 0; // revoked: reeled all the way back in
+      wag.v -= 60;
+      agentOut.innerHTML = `<span class="ok">Revoked.</span> ${note} ${txLink(detail)}`;
+    } else if (ok) {
+      agentStep = Math.min(agentStep + 1, 3); // allowed: a little more line
+      wag.v += 50;
+      agentOut.innerHTML = `<span class="ok">Allowed.</span> ${note} ${txLink(detail)}`;
+    } else {
+      drop.v -= 560; bow.v += 380; wag.v -= 110; // the line snaps taut and jerks the bait back
+      const [x] = at(POINT);
+      refuse("REFUSED", x - (phone ? 20 : 90), knot.y + (phone ? -70 : 60));
+      agentOut.innerHTML = `<span class="no">Refused by the leash.</span> ${note}`;
+    }
+    pose();
+  });
+
+  $("runlog").innerHTML = RUN.map(([ok, text, detail]) => `
     <li class="${ok ? "is-ok" : "is-no"}">
       <span class="run-mark" aria-hidden="true">${ok ? "✓" : "✕"}</span>
       <span class="run-text"><span class="sr-only">${ok ? "Allowed: " : "Refused: "}</span>${text}</span>
       ${ok
-        ? `<a class="run-detail" href="https://explorer.solana.com/tx/${detail}?cluster=devnet" target="_blank" rel="noopener">tx</a>`
+        ? `<a class="run-detail" href="${EXPLORER}/tx/${detail}?cluster=devnet" target="_blank" rel="noopener">tx</a>`
         : `<span class="run-detail">${detail}</span>`}
     </li>`).join("");
+  const dialog = $("run-dialog");
+  $("run-open").addEventListener("click", () => (dialog.showModal ? dialog.showModal() : dialog.setAttribute("open", "")));
+  dialog.addEventListener("click", (e) => { if (e.target === dialog) dialog.close(); });
 
-  /* ---------------- Rule builder examples ---------------- */
-  const examples = [
-`# Fair open: small bags first, then it opens up
-rule fair_open {
-  when age < 30m      -> max_wallet 0.5%
-  when age < 2h       -> max_wallet 1%
-  when mcap > $500k   -> max_sell   0.25%
-  always              -> max_trades_per_block 3
-}`,
-`# Lure Pass window + creator lock
-rule launch_day {
-  when age < 5m and holds($LURE) < 50000 -> refuse buy
-  when age < 5m                           -> max_buy 0.2%
-  creator -> lock 7d then sell 1% per day
-}`,
-`# Event token: sells unlock when BTC hits $150k
-rule btc_150k {
-  feed btc = pyth("BTC/USD")
-  when btc.price < 150000  -> refuse sell
-  when btc.price >= 150000 -> unlock forever
-  game last_buyer_wins { timer 10m, min_buy 0.05%, pot 50% of creator_fee }
-}`,
-`# The agent runs the game, inside limits fixed at launch
-rule last_bite {
-  game last_buyer_wins { timer agent(5m..30m, step 5m, every 1h), min_buy 0.05% }
-  agent -> spend pot, buyback 1 SOL per action, 3 SOL per day
-  agent -> reward 0.05 SOL each, 0.1 SOL per day
-}`,
-  ];
-
-  const codeEl = document.getElementById("code-ex");
-  const showExample = (i) => { codeEl.innerHTML = highlight(examples[i]); };
-  showExample(0);
-
-  document.querySelectorAll(".code-tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      document.querySelectorAll(".code-tab").forEach((t) => {
-        t.classList.toggle("is-active", t === tab);
-        t.setAttribute("aria-selected", String(t === tab));
-      });
-      showExample(Number(tab.dataset.ex));
-    });
-  });
+  /* ---------------- Go ---------------- */
+  measure();
+  markWeights();
+  pose(true);
+  if (!reduce) drop.x = -TACKLE * scale * 0.3; // the rig drops in from above the window
+  onScroll();
+  requestAnimationFrame(frame);
 })();

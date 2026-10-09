@@ -18,7 +18,7 @@
     { name: "Pufferfish", ticker: "PUFF", desc: "Sell caps loosen when SOL pumps and tighten when it dumps.", hooks: ["mood", "maxw"], curve: "permanent", mc: 88000, vol24: 15400, change: -1.9, holders: 702, ageMin: 5760 },
     { name: "Koi Pond", ticker: "KOI", desc: "Members only: hold a Koi NFT to buy.", hooks: ["gated"], curve: "permanent", mc: 51300, vol24: 2900, change: 0.8, holders: 260, ageMin: 15840 },
     { name: "Reel Money", ticker: "REEL", desc: "Clock's ticking. Don't be the second-to-last buyer.", hooks: ["lbw", "maxw"], curve: "graduating", mc: 73900, vol24: 120500, change: 22.4, holders: 802, ageMin: 480, game: { type: "lbw", pot: 11.2, ends: 95, timer: 300 } },
-    { name: "Tide", ticker: "TIDE", desc: "Comes in, goes out. Three trades per block, max.", hooks: ["bundle"], curve: "graduating", mc: 19600, vol24: 8800, change: 9.9, holders: 151, ageMin: 52 },
+    { name: "Tide", ticker: "TIDE", desc: "Comes in, goes out. Nobody takes more than 2% in one block.", hooks: ["bundle"], curve: "graduating", mc: 19600, vol24: 8800, change: 9.9, holders: 151, ageMin: 52 },
     { name: "Catch of the Day", ticker: "CATCH", desc: "A new king every five minutes.", hooks: ["kob"], curve: "graduating", mc: 52800, vol24: 44400, change: 15.6, holders: 470, ageMin: 120, game: { type: "kob", pot: 1.3, ends: 230 } },
     { name: "Mackerel", ticker: "MACK", desc: "Snipers stay out for the first ten minutes.", hooks: ["sniper", "pass", "maxw"], curve: "graduating", mc: 6100, vol24: 900, change: 1.2, holders: 12, ageMin: 1 },
     { name: "Moby", ticker: "MOBY", desc: "Whale-proof all the way to graduation.", hooks: ["sliding", "devlock"], curve: "graduated", mc: 3120000, vol24: 780000, change: -6.5, holders: 9120, ageMin: 8640 },
