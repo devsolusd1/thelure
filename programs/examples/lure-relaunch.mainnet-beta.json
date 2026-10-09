@@ -1,0 +1,13 @@
+{
+  "cluster": "mainnet-beta",
+  "mint": "pH8X2DBCpgHAvhh96oGyZkafbvdUmsW843BCXFzLURE",
+  "pool": "2APyyQekX5BiDbsRKDJGDGb8yg37y2fDcD6cFmTb3Fh9",
+  "config": "CnQYd6Apn2cPhy7vMUUthr2FGuFC2MhFHXx5kjcycWkD",
+  "owner": "FTJRJ5uocDTqhvxwN88vt4Noh4fjJQkFmX7HEsR9YAh7",
+  "solUsdAtLaunch": 108.94277720776206,
+  "startUsd": 8000,
+  "graduationUsd": 60000,
+  "feeBps": 300,
+  "startFeeBps": 5000,
+  "decaySeconds": 180
+}
