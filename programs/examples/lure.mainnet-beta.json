@@ -1,0 +1,11 @@
+{
+  "cluster": "mainnet-beta",
+  "mint": "S5Szmr3WKsDwqqMDGMGAEYMJdk2u3LMa4AkXAL3LURE",
+  "pool": "2sh9cfwTex2i1bUEfXZTnsgMyaNEMGs7FPhvDvSJkoGH",
+  "config": "HUzmi2Hvpbt9CkavxCSE5XFSsPAxkm6Mw9rEXNjjXaVH",
+  "owner": "APEMKyXNYvHsjzX7xff25vqUJr7EefvCgDGMs5HwQWm2",
+  "solUsdAtLaunch": 108.65774439845238,
+  "startUsd": 8000,
+  "graduationUsd": 60000,
+  "feeBps": 300
+}

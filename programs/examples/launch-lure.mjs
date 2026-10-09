@@ -11,6 +11,7 @@
 //   FEE_BPS      fee per trade, on the curve and in the pool after it (default 300 = 3%)
 //   URI          the token's metadata (default: the file pinned to IPFS for it)
 //   MINT_KEYPAIR a key file for the token's address, if one was made beforehand
+//   PRIORITY     a price per compute unit, in micro-lamports, so it lands on a busy cluster (default 50000)
 //
 // The curve is priced in SOL, so the dollar figures hold at the SOL price of the moment the
 // config is created. What it made is written to lure.<cluster>.json, addresses only.
@@ -20,7 +21,7 @@ import {
   DynamicBondingCurveClient, MigratedCollectFeeMode, MigrationFeeOption, MigrationOption, TokenAuthorityOption, TokenDecimal, TokenType,
 } from "@meteora-ag/dynamic-bonding-curve-sdk";
 import { NATIVE_MINT } from "@solana/spl-token";
-import { clusterApiUrl, Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
+import { clusterApiUrl, ComputeBudgetProgram, Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 
@@ -126,8 +127,15 @@ const tx = await client.partner.createConfigAndPool({
   quoteMint: NATIVE_MINT,
   preCreatePoolParam: { ...TOKEN, poolCreator: owner, baseMint: mint.publicKey },
 });
+// A small tip per compute unit, when there is room for it in the transaction.
+const priority = Number(process.env.PRIORITY ?? 50000);
 tx.feePayer = owner;
 tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+if (priority > 0) {
+  const tip = [ComputeBudgetProgram.setComputeUnitLimit({ units: 400000 }), ComputeBudgetProgram.setComputeUnitPrice({ microLamports: priority })];
+  tx.instructions.unshift(...tip);
+  try { tx.serialize({ requireAllSignatures: false, verifySignatures: false }); } catch { tx.instructions.splice(0, tip.length); }
+}
 const sim = await connection.simulateTransaction(tx);
 if (sim.value.err) {
   console.log(`\nREFUSED in simulation: ${JSON.stringify(sim.value.err)}\n${(sim.value.logs ?? []).slice(-6).join("\n")}`);
