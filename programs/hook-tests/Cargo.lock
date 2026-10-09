@@ -1176,6 +1176,7 @@ dependencies = [
  "lure-leash",
  "solana-account",
  "solana-address 2.6.1",
+ "solana-clock",
  "solana-instruction",
  "solana-instruction-error",
  "solana-keypair",

@@ -14,6 +14,7 @@ lure-leash = { path = "../leash" }
 litesvm = "0.16"
 solana-account = "4"
 solana-address = { version = "2", features = ["curve25519"] }
+solana-clock = "3"
 solana-instruction = "3"
 solana-instruction-error = "2"
 solana-keypair = "3"

@@ -3,6 +3,10 @@
 // It launches a token on a Meteora bonding curve with the hook installed, caps wallets at
 // 1% of supply, then trades through the curve and reports what the hook saw in each swap.
 //
+// It speaks the hook's second version, the code in ../hook. The copy on devnet is still the
+// first version and refuses this init: until the next deploy, set HOOK_PROGRAM to a
+// deployment of ../hook. It has not been run since it was changed for the second version.
+//
 //   npm install
 //   KEYPAIR=~/.config/solana/id.json node meteora-probe.mjs            # the cap is fixed at launch
 //   KEYPAIR=~/.config/solana/id.json LEASH=1 node meteora-probe.mjs    # the cap lives in a leash, and an agent raises it
@@ -132,6 +136,10 @@ const poolAuthority = deriveDbcPoolAuthority();
 
 // The mint key signs, so only whoever is launching this token can set its rules.
 // The curve's own vault is exempt: it holds the whole supply.
+// Data: tag, two bumps, flags, the leash parameter holding the cap and the one holding the
+// game timer (0xFF: not in a leash), the exempt owner, the leash, then the wallet cap, guard
+// slots, block limit, game timer and smallest buy that counts. Only the cap is on here.
+// When the rules name a leash the hook reads it during init, so it is passed as well.
 const initRules = new TransactionInstruction({
   programId: HOOK,
   keys: [
@@ -140,12 +148,14 @@ const initRules = new TransactionInstruction({
     meta(rules, { writable: true }),
     meta(list, { writable: true }),
     meta(SystemProgram.programId),
+    ...(WITH_LEASH ? [meta(leash)] : []),
   ],
   data: Buffer.concat([
-    Buffer.from([0, rulesBump, listBump, 0]),
+    Buffer.from([0, rulesBump, listBump, 0, WITH_LEASH ? 0 : 0xff, 0xff]),
     poolAuthority.toBuffer(),
     WITH_LEASH ? leash.toBuffer() : Buffer.alloc(32),
     u64(WITH_LEASH ? 0 : CAP),
+    u64(0), u64(0), i64(0), u64(0),
   ]),
 });
 
@@ -161,8 +171,10 @@ const initLeash = new TransactionInstruction({
   ]),
 });
 
-const setup = new Transaction().add(initRules);
+// The leash goes first: the hook only accepts rules whose leash it can already read.
+const setup = new Transaction();
 if (WITH_LEASH) setup.add(initLeash);
+setup.add(initRules);
 const rulesSig = await send(setup, [mint]);
 say(
   WITH_LEASH
